@@ -1,3 +1,4 @@
+Google Drive OAuth integration setup
 # Retina Accounts + Inventory OS — Vercel + Google Sheets starter
 
 ## 1. Create Google Sheet
