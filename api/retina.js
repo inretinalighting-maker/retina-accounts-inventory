@@ -107,6 +107,72 @@ async function saveTransaction(payload, api) {
   return { ok: true, id };
 }
 
+// Mutations locate records by immutable ID, never by row number supplied by the browser.
+async function locateRow(entity, id, api) {
+  if (!['accounts', 'transactions'].includes(entity)) throw new Error('Unsupported entity');
+  if (!id) throw new Error('Record ID is required');
+  const response = await api.sheets.spreadsheets.values.get({ spreadsheetId: api.id, range: sheetRange(entity) });
+  const values = response.data.values || [];
+  const header = values[0] || [];
+  const index = header.indexOf('id');
+  if (index < 0) throw new Error('Sheet is missing ID column');
+  const matches = [];
+  for (let i = 1; i < values.length; i++) if (String(values[i][index] || '') === String(id)) matches.push(i + 1);
+  if (matches.length !== 1) throw new Error(matches.length ? 'Duplicate IDs detected; operation blocked' : 'Record not found');
+  return { row: matches[0], header };
+}
+async function saveAccount(payload, api) {
+  const name = String(payload?.name || '').trim();
+  const group = String(payload?.group || '').trim();
+  if (!name || !group) throw new Error('Account name and group are required');
+  const existing = await read('accounts', api);
+  if (existing.some(a => a.name.toLowerCase() === name.toLowerCase() && String(a.id) !== String(payload.id || ''))) throw new Error('Account name already exists');
+  if (payload.id) {
+    const { row, header } = await locateRow('accounts', payload.id, api);
+    const old = existing.find(a => String(a.id) === String(payload.id));
+    const updated = { ...old, name, group };
+    await api.sheets.spreadsheets.values.update({ spreadsheetId: api.id, range: `'accounts'!A${row}:${columnLetter(header.length)}${row}`, valueInputOption: 'RAW', requestBody: { values: [header.map(k => updated[k] ?? '')] } });
+    return { ok: true, id: payload.id };
+  }
+  const id = `ACC-${crypto.randomUUID()}`;
+  await api.sheets.spreadsheets.values.append({ spreadsheetId: api.id, range: sheetRange('accounts'), valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS', requestBody: { values: [fields.accounts.map(k => ({id,name,group})[k] ?? '')] } });
+  return { ok: true, id };
+}
+function columnLetter(n) { let out = ''; while (n) { n--; out = String.fromCharCode(65 + n % 26) + out; n = Math.floor(n / 26); } return out; }
+async function sheetId(entity, api) {
+  const r = await api.sheets.spreadsheets.get({ spreadsheetId: api.id, fields: 'sheets(properties(sheetId,title))' });
+  const sheet = r.data.sheets?.find(s => s.properties.title === entity);
+  if (!sheet) throw new Error('Sheet not found');
+  return sheet.properties.sheetId;
+}
+async function deleteRecord(entity, id, api) {
+  const { row } = await locateRow(entity, id, api);
+  if (entity === 'accounts') {
+    const txns = await read('transactions', api);
+    if (txns.some(t => String(t.accountId) === String(id))) throw new Error('Account is used by transactions. Delete those test transactions first or keep the account.');
+  }
+  const sid = await sheetId(entity, api);
+  await api.sheets.spreadsheets.batchUpdate({ spreadsheetId: api.id, requestBody: { requests: [{ deleteDimension: { range: { sheetId: sid, dimension: 'ROWS', startIndex: row - 1, endIndex: row } } }] } });
+  return { ok: true };
+}
+async function updateTransaction(payload, api) {
+  if (!payload?.id) throw new Error('Transaction ID required');
+  if (!payload.date || !payload.accountId || !(Number(payload.amount) > 0)) throw new Error('Date, account and positive amount are required');
+  const { row, header } = await locateRow('transactions', payload.id, api);
+  const [accounts, projects, parties, oldRecords] = await Promise.all(['accounts','projects','parties','transactions'].map(k => read(k,api)));
+  const account = accounts.find(a => String(a.id) === String(payload.accountId));
+  if (!account) throw new Error('Select a live account');
+  const old = oldRecords.find(t => String(t.id) === String(payload.id));
+  const amount = Number(payload.amount);
+  const debit = ['Expense','Payment','Purchase'].includes(payload.voucherType) ? amount : 0;
+  const record = { ...old, ...payload, id: old.id, voucherNo: old.voucherNo, accountName: account.name,
+    projectName: projects.find(p => String(p.id) === String(payload.projectId))?.name || '',
+    partyName: parties.find(p => String(p.id) === String(payload.partyId))?.name || '',
+    amount, debit, credit: debit ? 0 : amount };
+  await api.sheets.spreadsheets.values.update({ spreadsheetId: api.id, range: `'transactions'!A${row}:${columnLetter(header.length)}${row}`, valueInputOption: 'RAW', requestBody: { values: [header.map(k => record[k] ?? '')] } });
+  return { ok: true, id: old.id };
+}
+
 function validUploadPassword(provided) {
   const expected = process.env.RETINA_UPLOAD_PASSWORD;
   if (!expected || typeof provided !== 'string') return false;
@@ -178,6 +244,12 @@ export default async function handler(req, res) {
       result = await dashboard(api);
     } else if (name === 'apiList') {
       result = await read(args[0], api);
+    } else if (name === 'apiSaveAccount') {
+      result = await saveAccount(args[0], api);
+    } else if (name === 'apiUpdateTransaction') {
+      result = await updateTransaction(args[0], api);
+    } else if (name === 'apiDeleteRecord') {
+      result = await deleteRecord(args[0], args[1], api);
     } else if (name === 'apiSave' && args[0] === 'transactions') {
       result = await saveTransaction(args[1], api);
     } else if (name === 'apiReport') {

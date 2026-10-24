@@ -25,6 +25,7 @@ const NAV = [
   ["reconciliation", "Reconciliation"],
   ["reports", "Reports"],
   ["masters", "Masters"],
+  ["chart", "Chart of Accounts"],
 ];
 
 const VOUCHER_TYPES = ["Expense", "Receipt", "Payment", "Contra", "Journal", "Purchase", "Sale"];
@@ -274,6 +275,7 @@ export default function RetinaAccountsInventoryOS() {
   const [txn, setTxn] = useState(initialTxn);
   const [modal, setModal] = useState(null);
   const [stagingRows, setStagingRows] = useState([]);
+  const [accountForm, setAccountForm] = useState({ id: "", name: "", group: "" });
 
   const masters = boot?.masters || {};
   const projects = masters.projects || [];
@@ -321,9 +323,10 @@ export default function RetinaAccountsInventoryOS() {
         bank: "bankTransactions",
         reconciliation: "reconciliation",
         masters: "accounts",
+        chart: "accounts",
       };
       if (view === "reports") return;
-      if (view === "masters") {
+      if (view === "masters" || view === "chart") {
         const [live, staging] = await Promise.all([run("apiList", "accounts"), run("apiStagingAccounts")]);
         setRows(live);
         setStagingRows(staging);
@@ -359,7 +362,7 @@ export default function RetinaAccountsInventoryOS() {
     setErr("");
     try {
       setLoading(true);
-      await run("apiSave", "transactions", {
+      await run(txn.id ? "apiUpdateTransaction" : "apiSave", ...(txn.id ? [] : ["transactions"]), {
         ...txn,
         amount: Number(txn.amount || 0),
         gstRate: Number(txn.gstRate || 0),
@@ -375,6 +378,28 @@ export default function RetinaAccountsInventoryOS() {
     }
   }
 
+  async function saveAccount(e) {
+    e.preventDefault();
+    try {
+      setLoading(true); setErr("");
+      await run("apiSaveAccount", accountForm);
+      setModal(null); setAccountForm({ id: "", name: "", group: "" });
+      const live = await run("apiList", "accounts");
+      setBoot(b => ({ ...b, masters: { ...b.masters, accounts: live } }));
+      setRows(live);
+    } catch (e) { setErr(e.message); } finally { setLoading(false); }
+  }
+  async function deleteRow(entity, row) {
+    if (!window.confirm(`Permanently delete ${entity === "accounts" ? row.name : (row.voucherNo || row.id)}? This cannot be undone.`)) return;
+    try {
+      setLoading(true); setErr("");
+      await run("apiDeleteRecord", entity, row.id);
+      const live = await run("apiList", entity);
+      setRows(live);
+      if (entity === "accounts") setBoot(b => ({ ...b, masters: { ...b.masters, accounts: live } }));
+      if (entity === "transactions") setDashboard(await run("apiDashboard", filters));
+    } catch (e) { setErr(e.message); } finally { setLoading(false); }
+  }
   async function uploadAttachment(file) {
     if (!file) return;
     setLoading(true);
@@ -429,7 +454,7 @@ export default function RetinaAccountsInventoryOS() {
           ))}
         </nav>
 
-        <button style={S.primaryBtn} onClick={() => setModal({ type: "transaction" })}>
+        <button style={S.primaryBtn} onClick={() => { setTxn(initialTxn); setModal({ type: "transaction" }); }}>
           + New Transaction
         </button>
       </aside>
@@ -453,7 +478,7 @@ export default function RetinaAccountsInventoryOS() {
         {loading && <div style={S.loading}>Loading…</div>}
 
         {!loading && view === "dashboard" && <Dashboard data={dashboard} onReport={generateReport} />}
-        {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} />}
+        {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} onEdit={r => { setTxn({ ...initialTxn, ...r, amount: r.amount || Number(r.debit || r.credit || 0) }); setModal({ type: "transaction" }); }} onDelete={r => deleteRow("transactions", r)} />}
         {!loading && view === "sales" && <Sales rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "purchases" && <Purchases rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "inventory" && <Inventory rows={filteredRows} query={query} setQuery={setQuery} products={products} />}
@@ -462,9 +487,10 @@ export default function RetinaAccountsInventoryOS() {
         {!loading && view === "bank" && <Bank rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "reconciliation" && <Reconciliation rows={filteredRows} />}
         {!loading && view === "reports" && <Reports onRun={generateReport} />}
-        {!loading && view === "masters" && <>
+        {!loading && (view === "masters" || view === "chart") && <>
           <p style={{ marginBottom: 12 }}>Live approved accounts (existing IDs retained). New transactions use only these accounts.</p>
-          <GenericTable title="Live Chart of Accounts" rows={filteredRows} query={query} setQuery={setQuery} />
+          <div style={{ marginBottom: 12 }}><button style={S.primaryBtn} onClick={() => { setAccountForm({ id: "", name: "", group: "" }); setModal({ type: "account" }); }}>+ Add Account</button></div>
+          <TablePage title="Live Chart of Accounts" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Account Name"],["group","Group"]]} onEdit={r => { setAccountForm({ id: r.id, name: r.name, group: r.group }); setModal({ type: "account" }); }} onDelete={r => deleteRow("accounts", r)} />
           <h3 style={{ marginTop: 28 }}>Staged Chart of Accounts — Review Only</h3>
           <p>These accounts are not active for posting. Fill accountGroup and approve classifications in Google Sheets before a controlled migration. No automatic import is performed.</p>
           <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -475,8 +501,18 @@ export default function RetinaAccountsInventoryOS() {
         </>}
       </main>
 
+      {modal?.type === "account" && (
+        <Modal title={accountForm.id ? "Edit Account" : "Add Account"} onClose={() => setModal(null)}>
+          <form onSubmit={saveAccount} style={S.formGrid}>
+            {accountForm.id && <Field label="Account ID"><input value={accountForm.id} readOnly style={S.input} /></Field>}
+            <Field label="Account Name"><input required value={accountForm.name} onChange={e => setAccountForm(x => ({ ...x, name: e.target.value }))} style={S.input} /></Field>
+            <Field label="Account Group"><input required value={accountForm.group} onChange={e => setAccountForm(x => ({ ...x, group: e.target.value }))} style={S.input} placeholder="e.g. Current Asset" /></Field>
+            <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>Save Account</button></div>
+          </form>
+        </Modal>
+      )}
       {modal?.type === "transaction" && (
-        <Modal title="New Transaction" onClose={() => setModal(null)}>
+        <Modal title={txn.id ? "Edit Transaction" : "New Transaction"} onClose={() => setModal(null)}>
           <form onSubmit={saveTransaction} style={S.formGrid}>
             <Field label="Date"><input type="date" value={txn.date} onChange={(e) => setTxn({ ...txn, date: e.target.value })} style={S.input} required /></Field>
             <Field label="Voucher Type"><select value={txn.voucherType} onChange={(e) => setTxn({ ...txn, voucherType: e.target.value })} style={S.input}>{VOUCHER_TYPES.map(x => <option key={x}>{x}</option>)}</select></Field>
@@ -497,7 +533,7 @@ export default function RetinaAccountsInventoryOS() {
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" style={S.primaryBtn}>Save Transaction</button>
+              <button type="submit" style={S.primaryBtn}>{txn.id ? "Update Transaction" : "Save Transaction"}</button>
             </div>
           </form>
         </Modal>
@@ -565,8 +601,8 @@ function Dashboard({ data, onReport }) {
   );
 }
 
-function Transactions({ rows, query, setQuery }) {
-  return <TablePage title="Journal / Transactions" rows={rows} query={query} setQuery={setQuery}
+function Transactions({ rows, query, setQuery, onEdit, onDelete }) {
+  return <TablePage title="Journal / Transactions" rows={rows} query={query} setQuery={setQuery} onEdit={onEdit} onDelete={onDelete}
     columns={[
       ["date","Date"],["voucherType","Type"],["voucherNo","Voucher"],["projectName","Project"],["partyName","Party"],
       ["accountName","Account"],["debit","Debit"],["credit","Credit"],["paymentMode","Mode"],["narration","Narration"]
@@ -612,25 +648,25 @@ function GenericTable({ title, rows, query, setQuery }) {
   return <TablePage title={title} rows={rows} query={query} setQuery={setQuery} columns={keys} />;
 }
 
-function TablePage({ title, rows, query, setQuery, columns }) {
+function TablePage({ title, rows, query, setQuery, columns, onEdit, onDelete }) {
   return (
     <div style={S.panel}>
       <div style={S.panelHeader}>
         <h3 style={S.h3}>{title}</h3>
         <input placeholder="Search…" value={query} onChange={(e) => setQuery(e.target.value)} style={S.input} />
       </div>
-      <DataTable rows={rows} columns={columns} />
+      <DataTable rows={rows} columns={columns} onEdit={onEdit} onDelete={onDelete} />
     </div>
   );
 }
 
-function DataTable({ rows = [], columns = [] }) {
+function DataTable({ rows = [], columns = [], onEdit, onDelete }) {
   return (
     <div style={S.tableWrap}>
       <table style={S.table}>
-        <thead><tr>{columns.map(([k,l]) => <th style={S.th} key={k}>{l}</th>)}</tr></thead>
+        <thead><tr>{columns.map(([k,l]) => <th style={S.th} key={k}>{l}</th>)}{(onEdit || onDelete) && <th style={S.th}>Actions</th>}</tr></thead>
         <tbody>
-          {rows.map((r, i) => <tr key={r.id || i}>{columns.map(([k]) => <td style={S.td} key={k}>{formatCell(k, r[k])}</td>)}</tr>)}
+          {rows.map((r, i) => <tr key={r.id || i}>{columns.map(([k]) => <td style={S.td} key={k}>{formatCell(k, r[k])}</td>)}{(onEdit || onDelete) && <td style={S.td}>{onEdit && <button style={S.secondaryBtn} onClick={() => onEdit(r)}>Edit</button>} {onDelete && <button style={S.secondaryBtn} onClick={() => onDelete(r)}>Delete</button>}</td>}</tr>)}
           {!rows.length && <tr><td style={S.td} colSpan={Math.max(1, columns.length)}>No records</td></tr>}
         </tbody>
       </table>
