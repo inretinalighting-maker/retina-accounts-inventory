@@ -273,6 +273,7 @@ export default function RetinaAccountsInventoryOS() {
   const [filters, setFilters] = useState({ projectId: "", division: "", from: "", to: "" });
   const [txn, setTxn] = useState(initialTxn);
   const [modal, setModal] = useState(null);
+  const [stagingRows, setStagingRows] = useState([]);
 
   const masters = boot?.masters || {};
   const projects = masters.projects || [];
@@ -322,6 +323,12 @@ export default function RetinaAccountsInventoryOS() {
         masters: "accounts",
       };
       if (view === "reports") return;
+      if (view === "masters") {
+        const [live, staging] = await Promise.all([run("apiList", "accounts"), run("apiStagingAccounts")]);
+        setRows(live);
+        setStagingRows(staging);
+        return;
+      }
       setRows(await run("apiList", map[view], filters));
     } catch (e) {
       setErr(e.message);
@@ -455,7 +462,17 @@ export default function RetinaAccountsInventoryOS() {
         {!loading && view === "bank" && <Bank rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "reconciliation" && <Reconciliation rows={filteredRows} />}
         {!loading && view === "reports" && <Reports onRun={generateReport} />}
-        {!loading && view === "masters" && <GenericTable title="Chart of Accounts" rows={filteredRows} query={query} setQuery={setQuery} />}
+        {!loading && view === "masters" && <>
+          <p style={{ marginBottom: 12 }}>Live approved accounts (existing IDs retained). New transactions use only these accounts.</p>
+          <GenericTable title="Live Chart of Accounts" rows={filteredRows} query={query} setQuery={setQuery} />
+          <h3 style={{ marginTop: 28 }}>Staged Chart of Accounts — Review Only</h3>
+          <p>These accounts are not active for posting. Fill accountGroup and approve classifications in Google Sheets before a controlled migration. No automatic import is performed.</p>
+          <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead><tr>{["Division", "Type", "Head", "Sub Head", "New ID", "Group", "Status"].map(h => <th key={h} style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ccc" }}>{h}</th>)}</tr></thead>
+            <tbody>{stagingRows.map((a, i) => <tr key={a.newAccountId || i}>{[a.division,a.type,a.head,a.subHead,a.newAccountId,a.accountGroup,a.migrationStatus].map((v,j) => <td key={j} style={{ padding: 8, borderBottom: "1px solid #ddd" }}>{v || "—"}</td>)}</tr>)}</tbody>
+          </table></div>
+          {!stagingRows.length && <p>No staged accounts found. Check the accounts_staging sheet.</p>}
+        </>}
       </main>
 
       {modal?.type === "transaction" && (

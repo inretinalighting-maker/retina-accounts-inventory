@@ -1,0 +1,3348 @@
+{
+  "legalEntity": "Sole Proprietorship",
+  "sourceFile": "chart_of_accounts.xlsx",
+  "migrationStatus": "STAGING_ONLY_NOT_POSTED",
+  "policy": "Do not auto-post bank transactions or historical payments; reconcile, classify and approve first. Original cells are retained.",
+  "chartAccounts": [
+    {
+      "sourceRow": 2,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 3,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | POP | Material",
+      "sourceSubHead": "",
+      "suggestedHead": "Building Renovation | POP | Material",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 4,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | POP | Contracter",
+      "sourceSubHead": "",
+      "suggestedHead": "Building Renovation | POP | Contracter",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 5,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Electrical | Material",
+      "sourceSubHead": "Electrical | Material",
+      "suggestedHead": "Building Renovation | Electrical | Material",
+      "suggestedSubHead": "Electrical | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 6,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Electrical | Contracter",
+      "sourceSubHead": "Electrical | Contracter",
+      "suggestedHead": "Building Renovation | Electrical | Contracter",
+      "suggestedSubHead": "Electrical | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 7,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Stone | Material",
+      "sourceSubHead": "Stone | Material",
+      "suggestedHead": "Building Renovation | Stone | Material",
+      "suggestedSubHead": "Stone | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 8,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Stone | Contracter",
+      "sourceSubHead": "Stone | Contracter",
+      "suggestedHead": "Building Renovation | Stone | Contracter",
+      "suggestedSubHead": "Stone | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 9,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Furniture | Material",
+      "sourceSubHead": "Furniture | Material",
+      "suggestedHead": "Building Renovation | Furniture | Material",
+      "suggestedSubHead": "Furniture | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 10,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Furniture | Contracter",
+      "sourceSubHead": "Furniture | Contracter",
+      "suggestedHead": "Building Renovation | Furniture | Contracter",
+      "suggestedSubHead": "Furniture | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 11,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Paint | Material",
+      "sourceSubHead": "Paint | Material",
+      "suggestedHead": "Building Renovation | Paint | Material",
+      "suggestedSubHead": "Paint | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 12,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Paint | Contracter",
+      "sourceSubHead": "",
+      "suggestedHead": "Building Renovation | Paint | Contracter",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 13,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Plumbing | Material",
+      "sourceSubHead": "Plumbing | Material",
+      "suggestedHead": "Building Renovation | Plumbing | Material",
+      "suggestedSubHead": "Plumbing | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 14,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Plumbing | Contracter",
+      "sourceSubHead": "",
+      "suggestedHead": "Building Renovation | Plumbing | Contracter",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 15,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Civil | Material",
+      "sourceSubHead": "Civil | Material",
+      "suggestedHead": "Building Renovation | Civil | Material",
+      "suggestedSubHead": "Civil | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 16,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | Civil | Contracter",
+      "sourceSubHead": "Civil | Contracter",
+      "suggestedHead": "Building Renovation | Civil | Contracter",
+      "suggestedSubHead": "Civil | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 17,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | HVAC | Material",
+      "sourceSubHead": "HVAC | Material",
+      "suggestedHead": "Building Renovation | HVAC | Material",
+      "suggestedSubHead": "HVAC | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 18,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation | HVAC | Contracter",
+      "sourceSubHead": "HVAC | Contracter",
+      "suggestedHead": "Building Renovation | HVAC | Contracter",
+      "suggestedSubHead": "HVAC | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 19,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Hardware & Software",
+      "sourceSubHead": "",
+      "suggestedHead": "Hardware & Software",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 20,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Security Deposit",
+      "sourceSubHead": "",
+      "suggestedHead": "Security Deposit",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 21,
+      "division": "Design",
+      "sourceType": "Asset",
+      "sourceHead": "Fixed Deposit",
+      "sourceSubHead": "",
+      "suggestedHead": "Fixed Deposit",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 22,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Enlighten | Cash",
+      "sourceSubHead": "",
+      "suggestedHead": "Enlighten | Cash",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 23,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Enlighten | IDFC",
+      "sourceSubHead": "",
+      "suggestedHead": "Enlighten | IDFC",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 24,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Imprest | Pradeep",
+      "sourceSubHead": "",
+      "suggestedHead": "Imprest | Pradeep",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 25,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Imprest | Pankaj",
+      "sourceSubHead": "",
+      "suggestedHead": "Imprest | Pankaj",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 26,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Imprest | Rajesh ji",
+      "sourceSubHead": "",
+      "suggestedHead": "Imprest | Rajesh ji",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 27,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Input CGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Input CGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 28,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Input SGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Input SGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 29,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Input IGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Input IGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 30,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "Accounts Receivable",
+      "sourceSubHead": "",
+      "suggestedHead": "Accounts Receivable",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 31,
+      "division": "Design",
+      "sourceType": "Current Asset",
+      "sourceHead": "TDS Recievable",
+      "sourceSubHead": "",
+      "suggestedHead": "TDS Receivable",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 32,
+      "division": "Design",
+      "sourceType": "Liability",
+      "sourceHead": "Loan",
+      "sourceSubHead": "",
+      "suggestedHead": "Loan",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 33,
+      "division": "Design",
+      "sourceType": "Current Liability",
+      "sourceHead": "Output CGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Output CGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 34,
+      "division": "Design",
+      "sourceType": "Current Liability",
+      "sourceHead": "Output SGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Output SGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 35,
+      "division": "Design",
+      "sourceType": "Current Liability",
+      "sourceHead": "Output IGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Output IGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 36,
+      "division": "Design",
+      "sourceType": "Current Liability",
+      "sourceHead": "Accounts Payable",
+      "sourceSubHead": "",
+      "suggestedHead": "Accounts Payable",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 37,
+      "division": "Design",
+      "sourceType": "Current Liability",
+      "sourceHead": "Advance from Customers",
+      "sourceSubHead": "",
+      "suggestedHead": "Advance from Customers",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 38,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Capital from Partner",
+      "sourceSubHead": "",
+      "suggestedHead": "Capital from Partner",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 39,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 40,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Alld Expenses",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Alld Expenses",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 41,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Flat 29 Expenses",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Flat 29 Expenses",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 42,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Travel",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Travel",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 43,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Meal",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Meal",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 44,
+      "division": "Design",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Other",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Other",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 45,
+      "division": "Design",
+      "sourceType": "Income",
+      "sourceHead": "Design Services Income",
+      "sourceSubHead": "",
+      "suggestedHead": "Design Services Income",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 46,
+      "division": "Design",
+      "sourceType": "Income",
+      "sourceHead": "Project Commissioning Income",
+      "sourceSubHead": "",
+      "suggestedHead": "Project Commissioning Income",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 47,
+      "division": "Design",
+      "sourceType": "Income",
+      "sourceHead": "Income | Installation Charges",
+      "sourceSubHead": "",
+      "suggestedHead": "Income | Installation Charges",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 48,
+      "division": "Design",
+      "sourceType": "Income",
+      "sourceHead": "Employee Recovery",
+      "sourceSubHead": "",
+      "suggestedHead": "Employee Recovery",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 49,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Flight/Train/Bus",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Flight/Train/Bus",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 50,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Uber/Rapido/Metro",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Uber/Rapido/Metro",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 51,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Hotel",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Hotel",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 52,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Meal",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Meal",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 53,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Petrol",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Petrol",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 54,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Others",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Others",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 55,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Salary Paid",
+      "sourceSubHead": "",
+      "suggestedHead": "Salary Paid",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 56,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies | House Keeping",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies | House Keeping",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 57,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies | Stationary",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies | Stationary",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 58,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies |Telephone Expense",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies |Telephone Expense",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 59,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies |Other",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies |Other",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 60,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 61,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Daily Essentials | Milk",
+      "sourceSubHead": "",
+      "suggestedHead": "Daily Essentials | Milk",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 62,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Daily Essentials | Water Bottle",
+      "sourceSubHead": "",
+      "suggestedHead": "Daily Essentials | Water Bottle",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 63,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Daily Essentials | Kitchen/Meals",
+      "sourceSubHead": "",
+      "suggestedHead": "Daily Essentials | Kitchen/Meals",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 64,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Rent",
+      "sourceSubHead": "",
+      "suggestedHead": "Rent",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 65,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Service & Maintainance",
+      "sourceSubHead": "",
+      "suggestedHead": "Service & Maintainance",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 66,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Electricity",
+      "sourceSubHead": "",
+      "suggestedHead": "Electricity",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 67,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "",
+      "suggestedHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 68,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "Porter | Mockup",
+      "suggestedHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "Porter | Mockup",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 69,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Business Travel | IN",
+      "sourceSubHead": "Visa & Travel Documentation",
+      "suggestedHead": "Business Travel | IN",
+      "suggestedSubHead": "Visa & Travel Documentation",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 70,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Business Travel",
+      "sourceSubHead": "Flight Ticket",
+      "suggestedHead": "Business Travel",
+      "suggestedSubHead": "Flight Ticket",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 71,
+      "division": "Design",
+      "sourceType": "Expense",
+      "sourceHead": "Business Travel",
+      "sourceSubHead": "Exhibition & Trade Fair Expenses",
+      "suggestedHead": "Business Travel",
+      "suggestedSubHead": "Exhibition & Trade Fair Expenses",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 80,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Hardware & Software",
+      "sourceSubHead": "",
+      "suggestedHead": "Hardware & Software",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 81,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Security Deposit",
+      "sourceSubHead": "",
+      "suggestedHead": "Security Deposit",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 82,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Fixed Deposit",
+      "sourceSubHead": "",
+      "suggestedHead": "Fixed Deposit",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 83,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Tools & Equipment",
+      "sourceSubHead": "",
+      "suggestedHead": "Tools & Equipment",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 84,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 85,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "POP | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "POP | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 86,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "POP | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "POP | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 87,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Electrical | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Electrical | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 88,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Electrical | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Electrical | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 89,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Stone | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Stone | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 90,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Stone | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Stone | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 91,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Furniture | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Furniture | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 92,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Furniture | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Furniture | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 93,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Paint | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Paint | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 94,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Paint | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Paint | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 95,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Plumbing | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Plumbing | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 96,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Plumbing | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Plumbing | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 97,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Civil | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Civil | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 98,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "Civil | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "Civil | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 99,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "HVAC | Material",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "HVAC | Material",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 100,
+      "division": "Product",
+      "sourceType": "Asset",
+      "sourceHead": "Building Renovation",
+      "sourceSubHead": "HVAC | Contracter",
+      "suggestedHead": "Building Renovation",
+      "suggestedSubHead": "HVAC | Contracter",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 101,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Imprest | Pradeep",
+      "sourceSubHead": "",
+      "suggestedHead": "Imprest | Pradeep",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 102,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Imprest | Pankaj",
+      "sourceSubHead": "",
+      "suggestedHead": "Imprest | Pankaj",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 103,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Imprest | Rajesh ji",
+      "sourceSubHead": "",
+      "suggestedHead": "Imprest | Rajesh ji",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 104,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Retina | Cash",
+      "sourceSubHead": "",
+      "suggestedHead": "Retina | Cash",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 105,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Retina | Kotak",
+      "sourceSubHead": "",
+      "suggestedHead": "Retina | Kotak",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 106,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Accounts Receivable",
+      "sourceSubHead": "",
+      "suggestedHead": "Accounts Receivable",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 107,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Input CGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Input CGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 108,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Input SGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Input SGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 109,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "Input IGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Input IGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 110,
+      "division": "Product",
+      "sourceType": "Current Asset",
+      "sourceHead": "TDS Recievable",
+      "sourceSubHead": "",
+      "suggestedHead": "TDS Receivable",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 111,
+      "division": "Product",
+      "sourceType": "Liability",
+      "sourceHead": "Loan",
+      "sourceSubHead": "",
+      "suggestedHead": "Loan",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 112,
+      "division": "Product",
+      "sourceType": "Current Liability",
+      "sourceHead": "Output CGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Output CGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 113,
+      "division": "Product",
+      "sourceType": "Current Liability",
+      "sourceHead": "Output SGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Output SGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 114,
+      "division": "Product",
+      "sourceType": "Current Liability",
+      "sourceHead": "Output IGST",
+      "sourceSubHead": "",
+      "suggestedHead": "Output IGST",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 115,
+      "division": "Product",
+      "sourceType": "Current Liability",
+      "sourceHead": "Accounts Payable",
+      "sourceSubHead": "",
+      "suggestedHead": "Accounts Payable",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 116,
+      "division": "Product",
+      "sourceType": "Current Liability",
+      "sourceHead": "Advance from Customers",
+      "sourceSubHead": "",
+      "suggestedHead": "Advance from Customers",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 117,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Capital from Owner",
+      "sourceSubHead": "",
+      "suggestedHead": "Capital from Owner",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 118,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 119,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Alld Expenses",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Alld Expenses",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 120,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Flat 29 Expenses",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Flat 29 Expenses",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 121,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Travel",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Travel",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 122,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Meal",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Meal",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 123,
+      "division": "Product",
+      "sourceType": "Equity",
+      "sourceHead": "Personal Drawings",
+      "sourceSubHead": "Other",
+      "suggestedHead": "Personal Drawings",
+      "suggestedSubHead": "Other",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 124,
+      "division": "Product",
+      "sourceType": "Income",
+      "sourceHead": "Income | Product Sales",
+      "sourceSubHead": "",
+      "suggestedHead": "Income | Product Sales",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 125,
+      "division": "Product",
+      "sourceType": "Income",
+      "sourceHead": "Income | Assembly & Installation",
+      "sourceSubHead": "",
+      "suggestedHead": "Income | Assembly & Installation",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 126,
+      "division": "Product",
+      "sourceType": "Income",
+      "sourceHead": "Income | Repair & Maintainance",
+      "sourceSubHead": "",
+      "suggestedHead": "Income | Repair & Maintainance",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 127,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Vehicle Expenses",
+      "sourceSubHead": "",
+      "suggestedHead": "Vehicle Expenses",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 128,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Vehicle Expenses",
+      "sourceSubHead": "Repair",
+      "suggestedHead": "Vehicle Expenses",
+      "suggestedSubHead": "Repair",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 129,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Vehicle Expenses",
+      "sourceSubHead": "Insurance",
+      "suggestedHead": "Vehicle Expenses",
+      "suggestedSubHead": "Insurance",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 130,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Vehicle Expenses",
+      "sourceSubHead": "Other",
+      "suggestedHead": "Vehicle Expenses",
+      "suggestedSubHead": "Other",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 131,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "",
+      "suggestedHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 132,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "Porter | Supply",
+      "suggestedHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "Porter | Supply",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 133,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "Porter | Manufacturing",
+      "suggestedHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "Porter | Manufacturing",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 134,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "Porter | Mockup",
+      "suggestedHead": "Outward Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "Porter | Mockup",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 135,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies | House Keeping",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies | House Keeping",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 136,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies | Stationary",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies | Stationary",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 137,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies | other",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies | other",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 138,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Daily Essentials | Milk",
+      "sourceSubHead": "",
+      "suggestedHead": "Daily Essentials | Milk",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 139,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Daily Essentials | Water Bottle",
+      "sourceSubHead": "",
+      "suggestedHead": "Daily Essentials | Water Bottle",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 140,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Daily Essentials | Kitchen/Meals",
+      "sourceSubHead": "",
+      "suggestedHead": "Daily Essentials | Kitchen/Meals",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 141,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 142,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "Google Drive",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "Google Drive",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 143,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "Zoho Books",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "Zoho Books",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 144,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "iCloud",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "iCloud",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 145,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "Morpholio",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "Morpholio",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 146,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Software Subscription",
+      "sourceSubHead": "Amazon Prime",
+      "suggestedHead": "Software Subscription",
+      "suggestedSubHead": "Amazon Prime",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 147,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Service & Maintainance",
+      "sourceSubHead": "",
+      "suggestedHead": "Service & Maintainance",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 148,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Flight/Train/Bus",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Flight/Train/Bus",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 149,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Uber/Rapido/Metro",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Uber/Rapido/Metro",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 150,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Hotel",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Hotel",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 151,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Meal",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Meal",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 152,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Petrol",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Petrol",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 153,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Site Visit | Others",
+      "sourceSubHead": "",
+      "suggestedHead": "Site Visit | Others",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 154,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Rent",
+      "sourceSubHead": "",
+      "suggestedHead": "Rent",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 155,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Salary Paid",
+      "sourceSubHead": "",
+      "suggestedHead": "Salary Paid",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 156,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Bank Charges",
+      "sourceSubHead": "",
+      "suggestedHead": "Bank Charges",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 157,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Penalties & Fines",
+      "sourceSubHead": "",
+      "suggestedHead": "Penalties & Fines",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 158,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Professional Development",
+      "sourceSubHead": "",
+      "suggestedHead": "Professional Development",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 159,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Legal & Professional Fees",
+      "sourceSubHead": "",
+      "suggestedHead": "Legal & Professional Fees",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 160,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Electricity",
+      "sourceSubHead": "",
+      "suggestedHead": "Electricity",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 161,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Office Supplies |Telephone Expense",
+      "sourceSubHead": "",
+      "suggestedHead": "Office Supplies |Telephone Expense",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 162,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 163,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | CN Payment",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | CN Payment",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 164,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Raw Material Consumption",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Raw Material Consumption",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 165,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Tools",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Tools",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 166,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Packing Material",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Packing Material",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 167,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Surface Treatment - Anodizing",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Surface Treatment - Anodizing",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 168,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Surface Treatment - Powder Coating",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Surface Treatment - Powder Coating",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 169,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | INWARD Frieght - IN[Air/Sea]",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | INWARD Frieght - IN[Air/Sea]",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 170,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | INWARD Frieght - Local [Air/Surface/Porter]",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | INWARD Frieght - Local [Air/Surface/Porter]",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 171,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Manufacturing Overheads",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Manufacturing Overheads",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 172,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Prototyping & Sampling Costs",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Prototyping & Sampling Costs",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 173,
+      "division": "Product",
+      "sourceType": "Cost of Goods Sold",
+      "sourceHead": "COGS | Surface Treatment - Electroplating",
+      "sourceSubHead": "",
+      "suggestedHead": "COGS | Surface Treatment - Electroplating",
+      "suggestedSubHead": "",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 174,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Business Travel | IN",
+      "sourceSubHead": "Visa & Travel Documentation",
+      "suggestedHead": "Business Travel | IN",
+      "suggestedSubHead": "Visa & Travel Documentation",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 175,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Business Travel",
+      "sourceSubHead": "Flight Ticket",
+      "suggestedHead": "Business Travel",
+      "suggestedSubHead": "Flight Ticket",
+      "reviewRequired": true
+    },
+    {
+      "sourceRow": 176,
+      "division": "Product",
+      "sourceType": "Expense",
+      "sourceHead": "Business Travel",
+      "sourceSubHead": "Exhibition & Trade Fair Expenses",
+      "suggestedHead": "Business Travel",
+      "suggestedSubHead": "Exhibition & Trade Fair Expenses",
+      "reviewRequired": true
+    }
+  ],
+  "rawSource": {
+    "chart": [
+      {
+        "excelRow": 1,
+        "cells": {
+          "A": "Division",
+          "B": "Type",
+          "C": "Head",
+          "D": "Sub Head"
+        }
+      },
+      {
+        "excelRow": 2,
+        "cells": {
+          "A": "Design",
+          "B": "Asset",
+          "C": "Building Renovation"
+        }
+      },
+      {
+        "excelRow": 3,
+        "cells": {
+          "C": "Building Renovation | POP | Material"
+        }
+      },
+      {
+        "excelRow": 4,
+        "cells": {
+          "C": "Building Renovation | POP | Contracter"
+        }
+      },
+      {
+        "excelRow": 5,
+        "cells": {
+          "C": "Building Renovation | Electrical | Material",
+          "D": "Electrical | Material"
+        }
+      },
+      {
+        "excelRow": 6,
+        "cells": {
+          "C": "Building Renovation | Electrical | Contracter",
+          "D": "Electrical | Contracter"
+        }
+      },
+      {
+        "excelRow": 7,
+        "cells": {
+          "C": "Building Renovation | Stone | Material",
+          "D": "Stone | Material"
+        }
+      },
+      {
+        "excelRow": 8,
+        "cells": {
+          "C": "Building Renovation | Stone | Contracter",
+          "D": "Stone | Contracter"
+        }
+      },
+      {
+        "excelRow": 9,
+        "cells": {
+          "C": "Building Renovation | Furniture | Material",
+          "D": "Furniture | Material"
+        }
+      },
+      {
+        "excelRow": 10,
+        "cells": {
+          "C": "Building Renovation | Furniture | Contracter",
+          "D": "Furniture | Contracter"
+        }
+      },
+      {
+        "excelRow": 11,
+        "cells": {
+          "C": "Building Renovation | Paint | Material",
+          "D": "Paint | Material"
+        }
+      },
+      {
+        "excelRow": 12,
+        "cells": {
+          "C": "Building Renovation | Paint | Contracter"
+        }
+      },
+      {
+        "excelRow": 13,
+        "cells": {
+          "C": "Building Renovation | Plumbing | Material",
+          "D": "Plumbing | Material"
+        }
+      },
+      {
+        "excelRow": 14,
+        "cells": {
+          "C": "Building Renovation | Plumbing | Contracter"
+        }
+      },
+      {
+        "excelRow": 15,
+        "cells": {
+          "C": "Building Renovation | Civil | Material",
+          "D": "Civil | Material"
+        }
+      },
+      {
+        "excelRow": 16,
+        "cells": {
+          "C": "Building Renovation | Civil | Contracter",
+          "D": "Civil | Contracter"
+        }
+      },
+      {
+        "excelRow": 17,
+        "cells": {
+          "C": "Building Renovation | HVAC | Material",
+          "D": "HVAC | Material"
+        }
+      },
+      {
+        "excelRow": 18,
+        "cells": {
+          "C": "Building Renovation | HVAC | Contracter",
+          "D": "HVAC | Contracter"
+        }
+      },
+      {
+        "excelRow": 19,
+        "cells": {
+          "B": "Asset",
+          "C": "Hardware & Software"
+        }
+      },
+      {
+        "excelRow": 20,
+        "cells": {
+          "B": "Asset",
+          "C": "Security Deposit"
+        }
+      },
+      {
+        "excelRow": 21,
+        "cells": {
+          "B": "Asset",
+          "C": "Fixed Deposit"
+        }
+      },
+      {
+        "excelRow": 22,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Enlighten | Cash"
+        }
+      },
+      {
+        "excelRow": 23,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Enlighten | IDFC"
+        }
+      },
+      {
+        "excelRow": 24,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Imprest | Pradeep"
+        }
+      },
+      {
+        "excelRow": 25,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Imprest | Pankaj"
+        }
+      },
+      {
+        "excelRow": 26,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Imprest | Rajesh ji"
+        }
+      },
+      {
+        "excelRow": 27,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Input CGST"
+        }
+      },
+      {
+        "excelRow": 28,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Input SGST"
+        }
+      },
+      {
+        "excelRow": 29,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Input IGST"
+        }
+      },
+      {
+        "excelRow": 30,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Accounts Receivable"
+        }
+      },
+      {
+        "excelRow": 31,
+        "cells": {
+          "B": "Current Asset",
+          "C": "TDS Recievable"
+        }
+      },
+      {
+        "excelRow": 32,
+        "cells": {
+          "B": "Liability",
+          "C": "Loan"
+        }
+      },
+      {
+        "excelRow": 33,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Output CGST"
+        }
+      },
+      {
+        "excelRow": 34,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Output SGST"
+        }
+      },
+      {
+        "excelRow": 35,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Output IGST"
+        }
+      },
+      {
+        "excelRow": 36,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Accounts Payable"
+        }
+      },
+      {
+        "excelRow": 37,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Advance from Customers"
+        }
+      },
+      {
+        "excelRow": 38,
+        "cells": {
+          "B": "Equity",
+          "C": "Capital from Partner"
+        }
+      },
+      {
+        "excelRow": 39,
+        "cells": {
+          "B": "Equity",
+          "C": "Personal Drawings"
+        }
+      },
+      {
+        "excelRow": 40,
+        "cells": {
+          "D": "Alld Expenses"
+        }
+      },
+      {
+        "excelRow": 41,
+        "cells": {
+          "D": "Flat 29 Expenses"
+        }
+      },
+      {
+        "excelRow": 42,
+        "cells": {
+          "D": "Travel"
+        }
+      },
+      {
+        "excelRow": 43,
+        "cells": {
+          "D": "Meal"
+        }
+      },
+      {
+        "excelRow": 44,
+        "cells": {
+          "D": "Other"
+        }
+      },
+      {
+        "excelRow": 45,
+        "cells": {
+          "B": "Income",
+          "C": "Design Services Income"
+        }
+      },
+      {
+        "excelRow": 46,
+        "cells": {
+          "B": "Income",
+          "C": "Project Commissioning Income"
+        }
+      },
+      {
+        "excelRow": 47,
+        "cells": {
+          "B": "Income",
+          "C": "Income | Installation Charges"
+        }
+      },
+      {
+        "excelRow": 48,
+        "cells": {
+          "B": "Income",
+          "C": "Employee Recovery"
+        }
+      },
+      {
+        "excelRow": 49,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Flight/Train/Bus"
+        }
+      },
+      {
+        "excelRow": 50,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Uber/Rapido/Metro"
+        }
+      },
+      {
+        "excelRow": 51,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Hotel"
+        }
+      },
+      {
+        "excelRow": 52,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Meal"
+        }
+      },
+      {
+        "excelRow": 53,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Petrol"
+        }
+      },
+      {
+        "excelRow": 54,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Others"
+        }
+      },
+      {
+        "excelRow": 55,
+        "cells": {
+          "B": "Expense",
+          "C": "Salary Paid"
+        }
+      },
+      {
+        "excelRow": 56,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies | House Keeping"
+        }
+      },
+      {
+        "excelRow": 57,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies | Stationary"
+        }
+      },
+      {
+        "excelRow": 58,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies |Telephone Expense"
+        }
+      },
+      {
+        "excelRow": 59,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies |Other"
+        }
+      },
+      {
+        "excelRow": 60,
+        "cells": {
+          "B": "Expense",
+          "C": "Software Subscription"
+        }
+      },
+      {
+        "excelRow": 61,
+        "cells": {
+          "B": "Expense",
+          "C": "Daily Essentials | Milk"
+        }
+      },
+      {
+        "excelRow": 62,
+        "cells": {
+          "B": "Expense",
+          "C": "Daily Essentials | Water Bottle"
+        }
+      },
+      {
+        "excelRow": 63,
+        "cells": {
+          "B": "Expense",
+          "C": "Daily Essentials | Kitchen/Meals"
+        }
+      },
+      {
+        "excelRow": 64,
+        "cells": {
+          "B": "Expense",
+          "C": "Rent"
+        }
+      },
+      {
+        "excelRow": 65,
+        "cells": {
+          "B": "Expense",
+          "C": "Service & Maintainance"
+        }
+      },
+      {
+        "excelRow": 66,
+        "cells": {
+          "B": "Expense",
+          "C": "Electricity"
+        }
+      },
+      {
+        "excelRow": 67,
+        "cells": {
+          "B": "Expense",
+          "C": "Outward Frieght - Local [Air/Surface/Porter]"
+        }
+      },
+      {
+        "excelRow": 68,
+        "cells": {
+          "D": "Porter | Mockup"
+        }
+      },
+      {
+        "excelRow": 69,
+        "cells": {
+          "B": "Expense",
+          "C": "Business Travel | IN",
+          "D": "Visa & Travel Documentation"
+        }
+      },
+      {
+        "excelRow": 70,
+        "cells": {
+          "B": "Expense",
+          "C": "Business Travel",
+          "D": "Flight Ticket"
+        }
+      },
+      {
+        "excelRow": 71,
+        "cells": {
+          "D": "Exhibition & Trade Fair Expenses"
+        }
+      },
+      {
+        "excelRow": 72,
+        "cells": {}
+      },
+      {
+        "excelRow": 73,
+        "cells": {}
+      },
+      {
+        "excelRow": 74,
+        "cells": {}
+      },
+      {
+        "excelRow": 75,
+        "cells": {}
+      },
+      {
+        "excelRow": 76,
+        "cells": {}
+      },
+      {
+        "excelRow": 77,
+        "cells": {}
+      },
+      {
+        "excelRow": 78,
+        "cells": {}
+      },
+      {
+        "excelRow": 79,
+        "cells": {
+          "A": "Division",
+          "B": "Type",
+          "C": "Account"
+        }
+      },
+      {
+        "excelRow": 80,
+        "cells": {
+          "A": "Product",
+          "B": "Asset",
+          "C": "Hardware & Software"
+        }
+      },
+      {
+        "excelRow": 81,
+        "cells": {
+          "B": "Asset",
+          "C": "Security Deposit"
+        }
+      },
+      {
+        "excelRow": 82,
+        "cells": {
+          "B": "Asset",
+          "C": "Fixed Deposit"
+        }
+      },
+      {
+        "excelRow": 83,
+        "cells": {
+          "B": "Asset",
+          "C": "Tools & Equipment"
+        }
+      },
+      {
+        "excelRow": 84,
+        "cells": {
+          "B": "Asset",
+          "C": "Building Renovation"
+        }
+      },
+      {
+        "excelRow": 85,
+        "cells": {
+          "D": "POP | Material"
+        }
+      },
+      {
+        "excelRow": 86,
+        "cells": {
+          "D": "POP | Contracter"
+        }
+      },
+      {
+        "excelRow": 87,
+        "cells": {
+          "D": "Electrical | Material"
+        }
+      },
+      {
+        "excelRow": 88,
+        "cells": {
+          "D": "Electrical | Contracter"
+        }
+      },
+      {
+        "excelRow": 89,
+        "cells": {
+          "D": "Stone | Material"
+        }
+      },
+      {
+        "excelRow": 90,
+        "cells": {
+          "D": "Stone | Contracter"
+        }
+      },
+      {
+        "excelRow": 91,
+        "cells": {
+          "D": "Furniture | Material"
+        }
+      },
+      {
+        "excelRow": 92,
+        "cells": {
+          "D": "Furniture | Contracter"
+        }
+      },
+      {
+        "excelRow": 93,
+        "cells": {
+          "D": "Paint | Material"
+        }
+      },
+      {
+        "excelRow": 94,
+        "cells": {
+          "D": "Paint | Contracter"
+        }
+      },
+      {
+        "excelRow": 95,
+        "cells": {
+          "D": "Plumbing | Material"
+        }
+      },
+      {
+        "excelRow": 96,
+        "cells": {
+          "D": "Plumbing | Contracter"
+        }
+      },
+      {
+        "excelRow": 97,
+        "cells": {
+          "D": "Civil | Material"
+        }
+      },
+      {
+        "excelRow": 98,
+        "cells": {
+          "D": "Civil | Contracter"
+        }
+      },
+      {
+        "excelRow": 99,
+        "cells": {
+          "D": "HVAC | Material"
+        }
+      },
+      {
+        "excelRow": 100,
+        "cells": {
+          "D": "HVAC | Contracter"
+        }
+      },
+      {
+        "excelRow": 101,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Imprest | Pradeep"
+        }
+      },
+      {
+        "excelRow": 102,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Imprest | Pankaj"
+        }
+      },
+      {
+        "excelRow": 103,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Imprest | Rajesh ji"
+        }
+      },
+      {
+        "excelRow": 104,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Retina | Cash"
+        }
+      },
+      {
+        "excelRow": 105,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Retina | Kotak"
+        }
+      },
+      {
+        "excelRow": 106,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Accounts Receivable"
+        }
+      },
+      {
+        "excelRow": 107,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Input CGST"
+        }
+      },
+      {
+        "excelRow": 108,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Input SGST"
+        }
+      },
+      {
+        "excelRow": 109,
+        "cells": {
+          "B": "Current Asset",
+          "C": "Input IGST"
+        }
+      },
+      {
+        "excelRow": 110,
+        "cells": {
+          "B": "Current Asset",
+          "C": "TDS Recievable"
+        }
+      },
+      {
+        "excelRow": 111,
+        "cells": {
+          "B": "Liability",
+          "C": "Loan"
+        }
+      },
+      {
+        "excelRow": 112,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Output CGST"
+        }
+      },
+      {
+        "excelRow": 113,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Output SGST"
+        }
+      },
+      {
+        "excelRow": 114,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Output IGST"
+        }
+      },
+      {
+        "excelRow": 115,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Accounts Payable"
+        }
+      },
+      {
+        "excelRow": 116,
+        "cells": {
+          "B": "Current Liability",
+          "C": "Advance from Customers"
+        }
+      },
+      {
+        "excelRow": 117,
+        "cells": {
+          "B": "Equity",
+          "C": "Capital from Owner"
+        }
+      },
+      {
+        "excelRow": 118,
+        "cells": {
+          "B": "Equity",
+          "C": "Personal Drawings"
+        }
+      },
+      {
+        "excelRow": 119,
+        "cells": {
+          "B": "Equity",
+          "D": "Alld Expenses"
+        }
+      },
+      {
+        "excelRow": 120,
+        "cells": {
+          "B": "Equity",
+          "D": "Flat 29 Expenses"
+        }
+      },
+      {
+        "excelRow": 121,
+        "cells": {
+          "B": "Equity",
+          "D": "Travel"
+        }
+      },
+      {
+        "excelRow": 122,
+        "cells": {
+          "B": "Equity",
+          "D": "Meal"
+        }
+      },
+      {
+        "excelRow": 123,
+        "cells": {
+          "B": "Equity",
+          "D": "Other"
+        }
+      },
+      {
+        "excelRow": 124,
+        "cells": {
+          "B": "Income",
+          "C": "Income | Product Sales"
+        }
+      },
+      {
+        "excelRow": 125,
+        "cells": {
+          "B": "Income",
+          "C": "Income | Assembly & Installation"
+        }
+      },
+      {
+        "excelRow": 126,
+        "cells": {
+          "B": "Income",
+          "C": "Income | Repair & Maintainance"
+        }
+      },
+      {
+        "excelRow": 127,
+        "cells": {
+          "B": "Expense",
+          "C": "Vehicle Expenses"
+        }
+      },
+      {
+        "excelRow": 128,
+        "cells": {
+          "D": "Repair"
+        }
+      },
+      {
+        "excelRow": 129,
+        "cells": {
+          "D": "Insurance"
+        }
+      },
+      {
+        "excelRow": 130,
+        "cells": {
+          "D": "Other"
+        }
+      },
+      {
+        "excelRow": 131,
+        "cells": {
+          "B": "Expense",
+          "C": "Outward Frieght - Local [Air/Surface/Porter]"
+        }
+      },
+      {
+        "excelRow": 132,
+        "cells": {
+          "B": "Expense",
+          "D": "Porter | Supply"
+        }
+      },
+      {
+        "excelRow": 133,
+        "cells": {
+          "B": "Expense",
+          "D": "Porter | Manufacturing"
+        }
+      },
+      {
+        "excelRow": 134,
+        "cells": {
+          "B": "Expense",
+          "D": "Porter | Mockup"
+        }
+      },
+      {
+        "excelRow": 135,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies | House Keeping"
+        }
+      },
+      {
+        "excelRow": 136,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies | Stationary"
+        }
+      },
+      {
+        "excelRow": 137,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies | other"
+        }
+      },
+      {
+        "excelRow": 138,
+        "cells": {
+          "B": "Expense",
+          "C": "Daily Essentials | Milk"
+        }
+      },
+      {
+        "excelRow": 139,
+        "cells": {
+          "B": "Expense",
+          "C": "Daily Essentials | Water Bottle"
+        }
+      },
+      {
+        "excelRow": 140,
+        "cells": {
+          "B": "Expense",
+          "C": "Daily Essentials | Kitchen/Meals"
+        }
+      },
+      {
+        "excelRow": 141,
+        "cells": {
+          "B": "Expense",
+          "C": "Software Subscription"
+        }
+      },
+      {
+        "excelRow": 142,
+        "cells": {
+          "D": "Google Drive"
+        }
+      },
+      {
+        "excelRow": 143,
+        "cells": {
+          "D": "Zoho Books"
+        }
+      },
+      {
+        "excelRow": 144,
+        "cells": {
+          "D": "iCloud"
+        }
+      },
+      {
+        "excelRow": 145,
+        "cells": {
+          "D": "Morpholio"
+        }
+      },
+      {
+        "excelRow": 146,
+        "cells": {
+          "D": "Amazon Prime"
+        }
+      },
+      {
+        "excelRow": 147,
+        "cells": {
+          "B": "Expense",
+          "C": "Service & Maintainance"
+        }
+      },
+      {
+        "excelRow": 148,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Flight/Train/Bus"
+        }
+      },
+      {
+        "excelRow": 149,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Uber/Rapido/Metro"
+        }
+      },
+      {
+        "excelRow": 150,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Hotel"
+        }
+      },
+      {
+        "excelRow": 151,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Meal"
+        }
+      },
+      {
+        "excelRow": 152,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Petrol"
+        }
+      },
+      {
+        "excelRow": 153,
+        "cells": {
+          "B": "Expense",
+          "C": "Site Visit | Others"
+        }
+      },
+      {
+        "excelRow": 154,
+        "cells": {
+          "B": "Expense",
+          "C": "Rent"
+        }
+      },
+      {
+        "excelRow": 155,
+        "cells": {
+          "B": "Expense",
+          "C": "Salary Paid"
+        }
+      },
+      {
+        "excelRow": 156,
+        "cells": {
+          "B": "Expense",
+          "C": "Bank Charges"
+        }
+      },
+      {
+        "excelRow": 157,
+        "cells": {
+          "B": "Expense",
+          "C": "Penalties & Fines"
+        }
+      },
+      {
+        "excelRow": 158,
+        "cells": {
+          "B": "Expense",
+          "C": "Professional Development"
+        }
+      },
+      {
+        "excelRow": 159,
+        "cells": {
+          "B": "Expense",
+          "C": "Legal & Professional Fees"
+        }
+      },
+      {
+        "excelRow": 160,
+        "cells": {
+          "B": "Expense",
+          "C": "Electricity"
+        }
+      },
+      {
+        "excelRow": 161,
+        "cells": {
+          "B": "Expense",
+          "C": "Office Supplies |Telephone Expense"
+        }
+      },
+      {
+        "excelRow": 162,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS"
+        }
+      },
+      {
+        "excelRow": 163,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | CN Payment"
+        }
+      },
+      {
+        "excelRow": 164,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Raw Material Consumption"
+        }
+      },
+      {
+        "excelRow": 165,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Tools"
+        }
+      },
+      {
+        "excelRow": 166,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Packing Material"
+        }
+      },
+      {
+        "excelRow": 167,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Surface Treatment - Anodizing"
+        }
+      },
+      {
+        "excelRow": 168,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Surface Treatment - Powder Coating"
+        }
+      },
+      {
+        "excelRow": 169,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | INWARD Frieght - IN[Air/Sea]"
+        }
+      },
+      {
+        "excelRow": 170,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | INWARD Frieght - Local [Air/Surface/Porter]"
+        }
+      },
+      {
+        "excelRow": 171,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Manufacturing Overheads"
+        }
+      },
+      {
+        "excelRow": 172,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Prototyping & Sampling Costs"
+        }
+      },
+      {
+        "excelRow": 173,
+        "cells": {
+          "B": "Cost of Goods Sold",
+          "C": "COGS | Surface Treatment - Electroplating"
+        }
+      },
+      {
+        "excelRow": 174,
+        "cells": {
+          "B": "Expense",
+          "C": "Business Travel | IN",
+          "D": "Visa & Travel Documentation"
+        }
+      },
+      {
+        "excelRow": 175,
+        "cells": {
+          "B": "Expense",
+          "C": "Business Travel",
+          "D": "Flight Ticket"
+        }
+      },
+      {
+        "excelRow": 176,
+        "cells": {
+          "D": "Exhibition & Trade Fair Expenses"
+        }
+      },
+      {
+        "excelRow": 177,
+        "cells": {}
+      },
+      {
+        "excelRow": 178,
+        "cells": {}
+      },
+      {
+        "excelRow": 179,
+        "cells": {}
+      },
+      {
+        "excelRow": 180,
+        "cells": {}
+      },
+      {
+        "excelRow": 181,
+        "cells": {}
+      },
+      {
+        "excelRow": 182,
+        "cells": {}
+      },
+      {
+        "excelRow": 183,
+        "cells": {}
+      },
+      {
+        "excelRow": 184,
+        "cells": {}
+      },
+      {
+        "excelRow": 185,
+        "cells": {}
+      },
+      {
+        "excelRow": 186,
+        "cells": {}
+      },
+      {
+        "excelRow": 187,
+        "cells": {}
+      },
+      {
+        "excelRow": 188,
+        "cells": {}
+      },
+      {
+        "excelRow": 189,
+        "cells": {}
+      },
+      {
+        "excelRow": 190,
+        "cells": {}
+      },
+      {
+        "excelRow": 191,
+        "cells": {}
+      },
+      {
+        "excelRow": 192,
+        "cells": {}
+      },
+      {
+        "excelRow": 193,
+        "cells": {}
+      },
+      {
+        "excelRow": 194,
+        "cells": {}
+      },
+      {
+        "excelRow": 195,
+        "cells": {}
+      },
+      {
+        "excelRow": 196,
+        "cells": {}
+      },
+      {
+        "excelRow": 197,
+        "cells": {}
+      },
+      {
+        "excelRow": 198,
+        "cells": {}
+      },
+      {
+        "excelRow": 199,
+        "cells": {}
+      },
+      {
+        "excelRow": 200,
+        "cells": {}
+      },
+      {
+        "excelRow": 201,
+        "cells": {}
+      },
+      {
+        "excelRow": 202,
+        "cells": {}
+      },
+      {
+        "excelRow": 203,
+        "cells": {}
+      },
+      {
+        "excelRow": 204,
+        "cells": {}
+      },
+      {
+        "excelRow": 205,
+        "cells": {}
+      },
+      {
+        "excelRow": 206,
+        "cells": {}
+      },
+      {
+        "excelRow": 207,
+        "cells": {}
+      },
+      {
+        "excelRow": 208,
+        "cells": {}
+      }
+    ],
+    "kotak": [
+      {
+        "excelRow": 1,
+        "cells": {
+          "A": "Kotak Transaction"
+        }
+      },
+      {
+        "excelRow": 2,
+        "cells": {
+          "A": "Transaction Date",
+          "B": "Value Date",
+          "C": "Particulars",
+          "D": "Cheque No.",
+          "E": "Debit/Credit",
+          "G": "Balance",
+          "I": "Bank"
+        }
+      },
+      {
+        "excelRow": 3,
+        "cells": {
+          "A": "46311.631944444445",
+          "B": "46311",
+          "C": "Recd:IMPS/628915002119/ENLIGHTEN /KKBK/X4324/IMPST",
+          "D": "IMPS-628915437968",
+          "E": "1000",
+          "F": "CR",
+          "G": "97.89",
+          "H": "CR",
+          "I": "Kotak Bank"
+        }
+      },
+      {
+        "excelRow": 4,
+        "cells": {
+          "A": "46311.631458333337",
+          "B": "46311",
+          "C": "Recd:IMPS/628915001157/ENLIGHTEN /KKBK/X4324/IMPST",
+          "D": "IMPS-628915437241",
+          "E": "50000",
+          "F": "CR",
+          "G": "902.11",
+          "H": "DR",
+          "I": "Kotak Bank"
+        }
+      },
+      {
+        "excelRow": 5,
+        "cells": {
+          "A": "46310.662731481483",
+          "B": "46310",
+          "C": "MB:SENT TO SACHDEVA LIGHTING AND ELECTRICALS PVT",
+          "D": "MB-998311364783",
+          "E": "-2065",
+          "F": "DR",
+          "G": "-50902.11",
+          "H": "DR",
+          "I": "Kotak Bank"
+        }
+      },
+      {
+        "excelRow": 6,
+        "cells": {
+          "A": "46310.662442129629",
+          "B": "46310",
+          "C": "Recd:IMPS/628815955894/ENLIGHTEN /KKBK/X4324/IMPST",
+          "D": "IMPS-628815591901",
+          "E": "1100",
+          "F": "CR",
+          "G": "-48837.11",
+          "H": "DR",
+          "I": "Kotak Bank"
+        }
+      },
+      {
+        "excelRow": 7,
+        "cells": {
+          "A": "46310.549317129633",
+          "B": "46310",
+          "C": "UPI/SALAHUDDIN/628813220108/St express b33",
+          "D": "UPI-628847832795",
+          "E": "-400",
+          "F": "DR",
+          "G": "-49437.11",
+          "H": "DR",
+          "I": "Kotak Bank"
+        }
+      },
+      {
+        "excelRow": 8,
+        "cells": {
+          "A": "46310.473703703705",
+          "B": "46310",
+          "C": "MB:SENT TO SHIVAM TRADING COMPANY/BALANCE LIGHT P",
+          "D": "MB-998311412087",
+          "E": "-7670",
+          "F": "DR",
+          "G": "47153.29",
+          "H": "DR",
+          "I": "Kotak Bank"
+        }
+      }
+    ],
+    "idfc": [
+      {
+        "excelRow": 1,
+        "cells": {
+          "A": "IDFC Bank Transactions"
+        }
+      },
+      {
+        "excelRow": 2,
+        "cells": {
+          "A": "Transaction Date",
+          "B": "Value Date",
+          "C": "Particulars",
+          "D": "Cheque No.",
+          "E": "Debit",
+          "F": "Credit",
+          "G": "Balance"
+        }
+      },
+      {
+        "excelRow": 3,
+        "cells": {
+          "A": "45161",
+          "B": "45162",
+          "C": "BB/CHQ DEP/005058/SUSHILA K GUPTA/STATE BANK OF IN",
+          "D": "5058",
+          "F": "200000",
+          "G": "200000"
+        }
+      },
+      {
+        "excelRow": 4,
+        "cells": {
+          "A": "45185",
+          "B": "45185",
+          "C": "IMPS-RIB/Fund Trf/325911764695/SALIK RAM/0199104000119979IBKL/",
+          "E": "8000",
+          "G": "192000"
+        }
+      },
+      {
+        "excelRow": 5,
+        "cells": {
+          "A": "45185",
+          "B": "45185",
+          "C": "IMPS-RIB/Fund Trf/325911772175/Shivam Gupta/30091379815SBIN/",
+          "E": "12000",
+          "G": "180000"
+        }
+      },
+      {
+        "excelRow": 6,
+        "cells": {
+          "A": "45185",
+          "B": "45185",
+          "C": "IMPS-RIB/Fund Trf/325914868254/Shivam Gupta/30091379815SBIN/Self",
+          "E": "1000",
+          "G": "179000"
+        }
+      },
+      {
+        "excelRow": 7,
+        "cells": {
+          "A": "45185",
+          "B": "45185",
+          "C": "IMPS-RIB/Fund Trf/325918986589/Shivam Gupta/30091379815SBIN/",
+          "E": "2000",
+          "G": "177000"
+        }
+      },
+      {
+        "excelRow": 8,
+        "cells": {
+          "A": "45187",
+          "B": "45187",
+          "C": "IMPS-RIB/Fund Trf/326110485702/Shivam Gupta/30091379815SBIN/",
+          "E": "20000",
+          "G": "157000"
+        }
+      }
+    ],
+    "historicalPayments": [
+      {
+        "excelRow": 1,
+        "cells": {
+          "A": "PLEASE SELECT",
+          "B": "PAYMENT DATE",
+          "C": "PROJECT NAME",
+          "D": "NARRATION",
+          "E": "AMOUNT",
+          "F": "PAYMENT HEAD",
+          "G": "PAYMENT SUBHEAD",
+          "H": "PARTY/INDIVIDUAL",
+          "I": "MODE OF PAYMENT",
+          "J": "DEBIT",
+          "K": "CREDIT",
+          "L": "ATTACHMENT OF BILL",
+          "M": "PARTY",
+          "N": "INVOICE NO."
+        }
+      },
+      {
+        "excelRow": 2,
+        "cells": {
+          "A": "Debit",
+          "B": "45330",
+          "D": "Petrol Expenses",
+          "E": "970",
+          "F": "Product",
+          "G": "Petrol",
+          "H": "Petrol Expenses",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "970"
+        }
+      },
+      {
+        "excelRow": 3,
+        "cells": {
+          "A": "Debit",
+          "B": "45332",
+          "D": "Petrol Expenses",
+          "E": "121",
+          "F": "Product",
+          "G": "Site Visit | Petrol",
+          "H": "Petrol Expenses",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "121"
+        }
+      },
+      {
+        "excelRow": 4,
+        "cells": {
+          "A": "Debit",
+          "B": "45333",
+          "D": "iCloud Storage Subscription",
+          "E": "100",
+          "F": "Product",
+          "G": "Software Subscription",
+          "H": "iCloud Storage",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "100"
+        }
+      },
+      {
+        "excelRow": 5,
+        "cells": {
+          "A": "Debit",
+          "B": "45834",
+          "D": "Payment to Uber rent",
+          "E": "150",
+          "F": "Product",
+          "G": "COGS | Frieght - Local [Air/Surface/Porter]",
+          "I": "Cash",
+          "J": "150"
+        }
+      },
+      {
+        "excelRow": 6,
+        "cells": {
+          "A": "Debit",
+          "B": "45836",
+          "D": "Payment to purchase Roll for packing",
+          "E": "80",
+          "F": "Product",
+          "G": "Expense | Office Supplies",
+          "I": "Cash",
+          "J": "80"
+        }
+      },
+      {
+        "excelRow": 7,
+        "cells": {
+          "A": "Debit",
+          "B": "45358",
+          "D": "Petrol Expenses",
+          "E": "2005",
+          "F": "Product",
+          "G": "Petrol",
+          "H": "Petrol Expenses",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "2005"
+        }
+      },
+      {
+        "excelRow": 8,
+        "cells": {
+          "A": "Debit",
+          "B": "45367",
+          "D": "Petrol Expenses",
+          "E": "151",
+          "F": "Product",
+          "G": "Site Visit | Petrol",
+          "H": "Petrol Expenses",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "151"
+        }
+      },
+      {
+        "excelRow": 9,
+        "cells": {
+          "A": "Debit",
+          "B": "45404",
+          "D": "Payment to Sachdeva",
+          "E": "120",
+          "F": "Product",
+          "G": "COGS",
+          "H": "Sachdeva Lighting & Electricals Pvt. Ltd.",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "120"
+        }
+      },
+      {
+        "excelRow": 10,
+        "cells": {
+          "A": "Debit",
+          "B": "45384",
+          "D": "Petrol Expenses",
+          "E": "101",
+          "F": "Product",
+          "G": "Site Visit | Petrol",
+          "H": "Petrol Expenses",
+          "I": "NEFT/RTGS/IMPS",
+          "J": "101"
+        }
+      },
+      {
+        "excelRow": 11,
+        "cells": {
+          "A": "Debit",
+          "B": "45842",
+          "D": "1000 cash to Pradeep for Allahabad Trip",
+          "E": "1000",
+          "F": "Product",
+          "G": "Site Visit | Hotel",
+          "I": "Cash",
+          "J": "1000"
+        }
+      }
+    ]
+  },
+  "accountingReview": [
+    "Owner capital and drawings belong to proprietor equity; do not treat drawings as business expense.",
+    "Bank-to-bank transfers are not income or expenses.",
+    "Employee imprest advances are current assets until substantiated and settled.",
+    "GST input credit subject to eligibility and supporting invoices; keep CGST SGST IGST separate.",
+    "TDS receivable current asset, TDS deducted from vendor payments generally liability until deposited.",
+    "Fixed assets capitalized only where recognition criteria met; separate depreciation and repairs.",
+    "Record vouchers with balanced debit and credit lines, immutable IDs, audit log and reversals.",
+    "Do not automatically post bank imports or infer GST/TDS from narration.",
+    "Maintain distinct divisions as cost centres, not separate legal entities."
+  ]
+}
