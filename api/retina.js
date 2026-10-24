@@ -60,6 +60,50 @@ async function stagingAccounts(api) {
   })).filter(r => r.head);
 }
 
+
+// Staging writes are deliberately confined to accounts_staging A:G.
+// Deleting clears cells instead of removing rows, so ROW()-based IDs elsewhere do not shift.
+async function stagingRowById(id, api) {
+  const rows = await stagingAccounts(api);
+  const found = rows.filter(r => r.newAccountId === id);
+  if (found.length !== 1) throw new Error(found.length ? 'Duplicate staging IDs; operation blocked' : 'Staged account not found');
+  return found[0];
+}
+function stageValues(p, id) {
+  const val = key => String(p?.[key] ?? '').trim();
+  if (!val('head')) throw new Error('Head is required');
+  if (!id || !/^[A-Za-z0-9_-]{3,80}$/.test(id)) throw new Error('Invalid account ID');
+  return [val('division'), val('type'), val('head'), val('subHead'), id, val('accountGroup'), val('migrationStatus') || 'Pending Review'];
+}
+async function saveStagedAccount(payload, api) {
+  const rows = await stagingAccounts(api);
+  const id = String(payload?.newAccountId || '').trim();
+  if (id) {
+    const old = await stagingRowById(id, api);
+    const values = stageValues(payload, id);
+    await api.sheets.spreadsheets.values.update({spreadsheetId: api.id, range: `'accounts_staging'!A${old.sourceRow}:G${old.sourceRow}`, valueInputOption: 'RAW', requestBody: {values: [values]}});
+    return {ok:true, id};
+  }
+  const newId = `RET-${crypto.randomUUID()}`;
+  const values = stageValues(payload, newId);
+  // Find a vacant existing staging row first, to avoid formula-generated IDs shifting.
+  const result = await api.sheets.spreadsheets.values.get({spreadsheetId: api.id, range: "'accounts_staging'!A:G"});
+  const all = result.data.values || [];
+  let row = -1;
+  for (let i = 1; i < all.length; i++) if (!(all[i] || []).some(v => String(v || '').trim())) {row = i + 1; break;}
+  if (row > 0) {
+    await api.sheets.spreadsheets.values.update({spreadsheetId: api.id, range: `'accounts_staging'!A${row}:G${row}`, valueInputOption:'RAW', requestBody:{values:[values]}});
+  } else {
+    await api.sheets.spreadsheets.values.append({spreadsheetId: api.id, range:"'accounts_staging'!A:G", valueInputOption:'RAW', insertDataOption:'INSERT_ROWS', requestBody:{values:[values]}});
+  }
+  return {ok:true, id:newId};
+}
+async function deleteStagedAccount(id, api) {
+  const old = await stagingRowById(id, api);
+  await api.sheets.spreadsheets.values.clear({spreadsheetId: api.id, range:`'accounts_staging'!A${old.sourceRow}:G${old.sourceRow}`});
+  return {ok:true};
+}
+
 const sum = (arr, key) => arr.reduce((n, x) => n + Number(x[key] || 0), 0);
 
 async function dashboard(api) {
@@ -240,6 +284,10 @@ export default async function handler(req, res) {
       result = { masters: Object.fromEntries(await Promise.all(MASTER_KEYS.map(async k => [k, await read(k, api)]))), orgName: 'Retina' };
     } else if (name === 'apiStagingAccounts') {
       result = await stagingAccounts(api);
+    } else if (name === 'apiSaveStagedAccount') {
+      result = await saveStagedAccount(args[0], api);
+    } else if (name === 'apiDeleteStagedAccount') {
+      result = await deleteStagedAccount(args[0], api);
     } else if (name === 'apiDashboard') {
       result = await dashboard(api);
     } else if (name === 'apiList') {

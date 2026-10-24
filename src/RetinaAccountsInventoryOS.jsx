@@ -275,6 +275,8 @@ export default function RetinaAccountsInventoryOS() {
   const [txn, setTxn] = useState(initialTxn);
   const [modal, setModal] = useState(null);
   const [stagingRows, setStagingRows] = useState([]);
+  const [stageForm, setStageForm] = useState({ division: '', type: '', head: '', subHead: '', newAccountId: '', accountGroup: '', migrationStatus: 'Pending Review' });
+  const [stageQuery, setStageQuery] = useState('');
   const [accountForm, setAccountForm] = useState({ id: "", name: "", group: "" });
 
   const masters = boot?.masters || {};
@@ -389,6 +391,23 @@ export default function RetinaAccountsInventoryOS() {
       setRows(live);
     } catch (e) { setErr(e.message); } finally { setLoading(false); }
   }
+  async function saveStage(e) {
+    e.preventDefault();
+    try {
+      setLoading(true); setErr('');
+      await run('apiSaveStagedAccount', stageForm);
+      setStagingRows(await run('apiStagingAccounts'));
+      setModal(null);
+    } catch (e) { setErr(e.message); window.alert(e.message); } finally { setLoading(false); }
+  }
+  async function deleteStage(row) {
+    if (!window.confirm(`Delete staged account ${row.newAccountId} — ${row.head}? This clears its Google Sheets row and cannot be undone.`)) return;
+    try {
+      setLoading(true); setErr('');
+      await run('apiDeleteStagedAccount', row.newAccountId);
+      setStagingRows(await run('apiStagingAccounts'));
+    } catch (e) { setErr(e.message); window.alert(e.message); } finally { setLoading(false); }
+  }
   async function deleteRow(entity, row) {
     if (!window.confirm(`Permanently delete ${entity === "accounts" ? row.name : (row.voucherNo || row.id)}? This cannot be undone.`)) return;
     try {
@@ -491,11 +510,18 @@ export default function RetinaAccountsInventoryOS() {
           <p style={{ marginBottom: 12 }}>Live approved accounts (existing IDs retained). New transactions use only these accounts.</p>
           <div style={{ marginBottom: 12 }}><button style={S.primaryBtn} onClick={() => { setAccountForm({ id: "", name: "", group: "" }); setModal({ type: "account" }); }}>+ Add Account</button></div>
           <TablePage title="Live Chart of Accounts" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Account Name"],["group","Group"]]} onEdit={r => { setAccountForm({ id: r.id, name: r.name, group: r.group }); setModal({ type: "account" }); }} onDelete={r => deleteRow("accounts", r)} />
-          <h3 style={{ marginTop: 28 }}>Staged Chart of Accounts — Review Only</h3>
-          <p>These accounts are not active for posting. Fill accountGroup and approve classifications in Google Sheets before a controlled migration. No automatic import is performed.</p>
-          <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead><tr>{["Division", "Type", "Head", "Sub Head", "New ID", "Group", "Status"].map(h => <th key={h} style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ccc" }}>{h}</th>)}</tr></thead>
-            <tbody>{stagingRows.map((a, i) => <tr key={a.newAccountId || i}>{[a.division,a.type,a.head,a.subHead,a.newAccountId,a.accountGroup,a.migrationStatus].map((v,j) => <td key={j} style={{ padding: 8, borderBottom: "1px solid #ddd" }}>{v || "—"}</td>)}</tr>)}</tbody>
+          <h3 style={{ marginTop: 28 }}>Staged Chart of Accounts — Manage Accounts</h3>
+          <p>Add, edit or delete staged accounts here. Saving immediately updates the <strong>accounts_staging</strong> Google Sheet. Staged accounts are not automatically available for transaction posting.</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+            <button style={S.primaryBtn} onClick={() => { setStageForm({ division: '', type: '', head: '', subHead: '', newAccountId: '', accountGroup: '', migrationStatus: 'Pending Review' }); setModal({ type: 'stagedAccount' }); }}>+ Add Staged Account</button>
+            <input aria-label="Search staged accounts" placeholder="Search staged accounts" value={stageQuery} onChange={e => setStageQuery(e.target.value)} style={{ ...S.input, maxWidth: 280 }} />
+          </div>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead><tr>{['Division', 'Type', 'Head', 'Sub Head', 'New ID', 'Group', 'Status', 'Actions'].map(h => <th key={h} style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #ccc' }}>{h}</th>)}</tr></thead>
+            <tbody>{stagingRows.filter(a => !stageQuery || JSON.stringify(a).toLowerCase().includes(stageQuery.toLowerCase())).map((a, i) => <tr key={a.newAccountId || i}>
+              {[a.division,a.type,a.head,a.subHead,a.newAccountId,a.accountGroup,a.migrationStatus].map((v,j) => <td key={j} style={{ padding: 8, borderBottom: '1px solid #ddd' }}>{v || '—'}</td>)}
+              <td style={{ padding: 8, whiteSpace: 'nowrap', borderBottom: '1px solid #ddd' }}><button style={S.secondaryBtn} onClick={() => { setStageForm({ ...a }); setModal({ type: 'stagedAccount' }); }}>Edit</button> <button style={S.secondaryBtn} onClick={() => deleteStage(a)}>Delete</button></td>
+            </tr>)}</tbody>
           </table></div>
           {!stagingRows.length && <p>No staged accounts found. Check the accounts_staging sheet.</p>}
         </>}
@@ -511,6 +537,16 @@ export default function RetinaAccountsInventoryOS() {
           </form>
         </Modal>
       )}
+      {modal?.type === 'stagedAccount' && (
+        <Modal title={stageForm.newAccountId ? 'Edit Staged Account' : 'Add Staged Account'} onClose={() => setModal(null)}>
+          <form onSubmit={saveStage} style={S.formGrid}>
+            {stageForm.newAccountId && <Field label="Account ID"><input readOnly value={stageForm.newAccountId} style={S.input} /></Field>}
+            {[["division", "Division"], ["type", "Type"], ["head", "Head"], ["subHead", "Sub Head"], ["accountGroup", "Account Group"]].map(([key, label]) => <Field key={key} label={label}><input required={key === 'head'} value={stageForm[key] || ''} onChange={e => setStageForm(v => ({ ...v, [key]: e.target.value }))} style={S.input} /></Field>)}
+            <Field label="Review Status"><select value={stageForm.migrationStatus || 'Pending Review'} onChange={e => setStageForm(v => ({ ...v, migrationStatus: e.target.value }))} style={S.input}><option>Pending Review</option><option>Approved</option><option>Rejected</option></select></Field>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, justifyContent: 'flex-end' }}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>Save to Google Sheets</button></div>
+          </form>
+        </Modal>
+      )}
       {modal?.type === "transaction" && (
         <Modal title={txn.id ? "Edit Transaction" : "New Transaction"} onClose={() => setModal(null)}>
           <form onSubmit={saveTransaction} style={S.formGrid}>
@@ -519,7 +555,7 @@ export default function RetinaAccountsInventoryOS() {
             <Field label="Division"><select value={txn.division} onChange={(e) => setTxn({ ...txn, division: e.target.value })} style={S.input}><option>Product</option><option>Design</option><option>Other</option></select></Field>
             <Field label="Project"><select value={txn.projectId} onChange={(e) => setTxn({ ...txn, projectId: e.target.value })} style={S.input}><option value="">No Project</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name || p.projectName || p.id}</option>)}</select></Field>
             <Field label="Party"><select value={txn.partyId} onChange={(e) => setTxn({ ...txn, partyId: e.target.value })} style={S.input}><option value="">No Party</option>{parties.map(p => <option key={p.id} value={p.id}>{p.name || p.partyName || p.id}</option>)}</select></Field>
-            <Field label="Account / Head"><select value={txn.accountId} onChange={(e) => setTxn({ ...txn, accountId: e.target.value })} style={S.input} required><option value="">Select account</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select></Field>
+            <Field label="Account / Head"><select value={txn.accountId} onChange={(e) => setTxn({ ...txn, accountId: e.target.value })} style={S.input} required><option value="">Select account</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select><button type="button" style={{ ...S.secondaryBtn, marginTop: 8 }} onClick={() => { setModal(null); setView('chart'); }}>Manage Chart of Accounts →</button><div style={S.muted}>Only live accounts are available for posting. Staged accounts must be migrated after review.</div></Field>
             <Field label="Amount"><input type="number" min="0" step="0.01" value={txn.amount} onChange={(e) => setTxn({ ...txn, amount: e.target.value })} style={S.input} required /></Field>
             <Field label="Payment Mode"><select value={txn.paymentMode} onChange={(e) => setTxn({ ...txn, paymentMode: e.target.value })} style={S.input}>{PAYMENT_MODES.map(x => <option key={x}>{x}</option>)}</select></Field>
             <Field label="Paid From / Received In"><select value={txn.bankCashAccountId} onChange={(e) => setTxn({ ...txn, bankCashAccountId: e.target.value })} style={S.input}><option value="">Select</option>{bankAccounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select></Field>
