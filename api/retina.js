@@ -104,6 +104,81 @@ async function deleteStagedAccount(id, api) {
   return {ok:true};
 }
 
+// Bank statement imports retain the original bankTransactions columns and append metadata.
+const BANK_HEADERS = [...fields.bankTransactions, 'sourceBank', 'importKey', 'valueDate', 'direction', 'matchedTransactionId', 'matchedVoucherNo', 'matchedAt'];
+async function ensureBankHeaders(api) {
+  const range = "'bankTransactions'!1:1";
+  const r = await api.sheets.spreadsheets.values.get({spreadsheetId:api.id,range});
+  const existing = r.data.values?.[0] || [];
+  if (!existing.length) throw new Error('bankTransactions sheet needs its existing header row');
+  const missing = BANK_HEADERS.filter(k=>!existing.includes(k));
+  if (missing.length) await api.sheets.spreadsheets.values.update({spreadsheetId:api.id,range:`'bankTransactions'!A1:${columnLetter(existing.length+missing.length)}1`,valueInputOption:'RAW',requestBody:{values:[[...existing,...missing]]}});
+  return [...existing,...missing];
+}
+function bankName(raw) {
+  const name = String(raw||'').trim().toLowerCase();
+  if (name === 'kotak' || name === 'kotak bank') return 'Kotak Bank';
+  if (name === 'idfc' || name === 'idfc bank' || name === 'idfc first bank') return 'IDFC Bank';
+  throw new Error('Select Kotak Bank or IDFC Bank');
+}
+function safeBankText(v) { const x=String(v??'').trim().slice(0,500); return /^[=+@\-\t\r]/.test(x) ? "'"+x : x; }
+function validBankDate(v) { const x=String(v||'').trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(x) || Number.isNaN(Date.parse(x))) throw new Error('Invalid bank date: '+x); return x; }
+function money(v) { const n=Number(v); if (!Number.isFinite(n)||n<0) throw new Error('Invalid bank amount'); return Math.round(n*100)/100; }
+function bankFingerprint(bank,r) {
+  return crypto.createHash('sha256').update(JSON.stringify([bank,r.date,r.valueDate,r.description,r.debit,r.credit,r.reference,r.balance])).digest('hex');
+}
+async function importBankRows(payload,api) {
+  const bank=bankName(payload?.bank);
+  const rows=payload?.rows;
+  if (!Array.isArray(rows)||!rows.length||rows.length>500) throw new Error('Import 1–500 rows at a time');
+  const header=await ensureBankHeaders(api);
+  const existing=await read('bankTransactions',api);
+  const seen=new Set(existing.map(r=>r.importKey).filter(Boolean));
+  const batch=[]; let skipped=0;
+  for (const raw of rows) {
+    const date=validBankDate(raw.date);
+    const debit=money(raw.debit||0),credit=money(raw.credit||0);
+    if ((debit>0)===(credit>0)) throw new Error('Each bank entry must have exactly one positive debit or credit');
+    const record={id:`BANK-${crypto.randomUUID()}`,date,accountName:bank,sourceBank:bank,description:safeBankText(raw.description),debit,credit,balance:raw.balance===''||raw.balance==null?'':Number(raw.balance),reference:safeBankText(raw.reference),valueDate:raw.valueDate?validBankDate(raw.valueDate):'',direction:debit>0?'Debit':'Credit',reconStatus:'Unmatched',matchedTransactionId:'',matchedVoucherNo:'',matchedAt:''};
+    if (!record.description) throw new Error('Missing bank description');
+    if (record.balance!==''&&!Number.isFinite(record.balance)) throw new Error('Invalid balance');
+    record.importKey=bankFingerprint(bank,record);
+    if (seen.has(record.importKey)) {skipped++;continue;}
+    seen.add(record.importKey);
+    batch.push(header.map(k=>record[k]??''));
+  }
+  if(batch.length) await api.sheets.spreadsheets.values.append({spreadsheetId:api.id,range:sheetRange('bankTransactions'),valueInputOption:'RAW',insertDataOption:'INSERT_ROWS',requestBody:{values:batch}});
+  return {ok:true,imported:batch.length,skipped};
+}
+async function reconcileBankRow(payload,api) {
+  const id=String(payload?.bankRowId||'');
+  const txid=String(payload?.transactionId||'');
+  if(!id) throw new Error('Bank row ID required');
+  const [bankRows,txns,header]=await Promise.all([read('bankTransactions',api),read('transactions',api),ensureBankHeaders(api)]);
+  const row=bankRows.find(r=>String(r.id)===id);
+  if(!row) throw new Error('Bank statement row not found');
+  const tx=txid?txns.find(t=>String(t.id)===txid):null;
+  if(txid&&!tx) throw new Error('Retina transaction not found');
+  if(tx) {
+    if(bankRows.some(r=>r.id!==id&&r.matchedTransactionId===txid&&r.reconStatus==='Matched')) throw new Error('Transaction is already matched to another bank row');
+    const amt=Number(row.debit||row.credit||0);
+    if(Math.abs(amt-Number(tx.amount||tx.debit||tx.credit||0))>0.009) throw new Error('Amounts differ; cannot confirm match');
+    // A payment/expense is a bank debit; a receipt/income is a bank credit.
+    const txDebit=Number(tx.debit||0)>0;
+    if(txDebit !== (Number(row.debit||0)>0)) throw new Error('Bank debit/credit direction does not match the transaction');
+    const bankAccounts=await read('bankAccounts',api);
+    const bankAccount=bankAccounts.find(b=>String(b.id)===String(tx.bankCashAccountId));
+    if(!bankAccount||bankName(bankAccount.name)!==bankName(row.accountName)) throw new Error('Transaction bank account does not match the imported statement');
+  }
+  const updated={...row,reconStatus:tx?'Matched':'Unmatched',matchedTransactionId:tx?.id||'',matchedVoucherNo:tx?.voucherNo||'',matchedAt:tx?new Date().toISOString():''};
+  const raw=await api.sheets.spreadsheets.values.get({spreadsheetId:api.id,range:sheetRange('bankTransactions')});
+  const values=raw.data.values||[]; const idx=(values[0]||[]).indexOf('id');
+  const matches=values.map((r,i)=>String(r[idx]||'')===id?i+1:0).filter(Boolean);
+  if(matches.length!==1) throw new Error('Duplicate or missing bank row ID');
+  await api.sheets.spreadsheets.values.update({spreadsheetId:api.id,range:`'bankTransactions'!A${matches[0]}:${columnLetter(header.length)}${matches[0]}`,valueInputOption:'RAW',requestBody:{values:[header.map(k=>updated[k]??'')]}});
+  return {ok:true,status:updated.reconStatus};
+}
+
 const sum = (arr, key) => arr.reduce((n, x) => n + Number(x[key] || 0), 0);
 
 async function dashboard(api) {
@@ -288,6 +363,10 @@ export default async function handler(req, res) {
       result = await saveStagedAccount(args[0], api);
     } else if (name === 'apiDeleteStagedAccount') {
       result = await deleteStagedAccount(args[0], api);
+    } else if (name === 'apiImportBankRows') {
+      result = await importBankRows(args[0], api);
+    } else if (name === 'apiReconcileBankRow') {
+      result = await reconcileBankRow(args[0], api);
     } else if (name === 'apiDashboard') {
       result = await dashboard(api);
     } else if (name === 'apiList') {

@@ -1,3 +1,4 @@
+import BankReconciliation from './BankReconciliation.jsx';
 import React, { useEffect, useMemo, useState } from "react";
 
 /**
@@ -504,7 +505,7 @@ export default function RetinaAccountsInventoryOS() {
         {!loading && view === "parties" && <GenericTable title="Parties" rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "projects" && <GenericTable title="Projects" rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "bank" && <Bank rows={filteredRows} query={query} setQuery={setQuery} />}
-        {!loading && view === "reconciliation" && <Reconciliation rows={filteredRows} />}
+        {!loading && view === "reconciliation" && <BankReconciliation />}
         {!loading && view === "reports" && <Reports onRun={generateReport} />}
         {!loading && (view === "masters" || view === "chart") && <>
           <p style={{ marginBottom: 12 }}>Live approved accounts (existing IDs retained). New transactions use only these accounts.</p>
