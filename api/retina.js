@@ -226,6 +226,34 @@ async function saveTransaction(payload, api) {
   return { ok: true, id };
 }
 
+// Historical CSV import: explicit confirmation, duplicate protection, no silent account creation.
+async function importHistoricalTransactions(payload, api) {
+  const input = payload?.rows;
+  if (!Array.isArray(input) || !input.length || input.length > 300) throw new Error('Import 1 to 300 rows per batch');
+  const [existing, accounts, projects, parties, banks] = await Promise.all(['transactions','accounts','projects','parties','bankAccounts'].map(x => read(x, api)));
+  const known = new Set(existing.map(x => String(x.voucherNo || '').trim().toLowerCase()).filter(Boolean));
+  const seen = new Set(); const records = []; const errors = [];
+  for (let i=0; i<input.length; i++) {
+    const r=input[i];
+    const date=String(r.date||'').trim(); const voucherNo=String(r.voucherNo||'').trim();
+    const account=accounts.find(a=>String(a.id)===String(r.accountId)) || accounts.find(a=>String(a.name).trim().toLowerCase()===String(r.accountName||'').trim().toLowerCase());
+    const amount=Number(r.amount||0); const debit=Number(r.debit||0); const credit=Number(r.credit||0);
+    const vtype=String(r.voucherType||'').trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!voucherNo||!account||!(amount>0)||!vtype||(!debit&&!credit)|| (debit>0&&credit>0)) { errors.push(`Row ${i+1}: invalid date (YYYY-MM-DD), voucher, account, type, amount or debit/credit`); continue; }
+    const key=voucherNo.toLowerCase();
+    if(known.has(key)||seen.has(key)){errors.push(`Row ${i+1}: duplicate voucher ${voucherNo}`);continue;}
+    seen.add(key);
+    const project=projects.find(x=>String(x.id)===String(r.projectId))||projects.find(x=>x.name===r.projectName);
+    const party=parties.find(x=>String(x.id)===String(r.partyId))||parties.find(x=>x.name===r.partyName);
+    const bank=banks.find(x=>String(x.id)===String(r.bankCashAccountId))||banks.find(x=>x.name===r.bankCashAccountName);
+    records.push({id:crypto.randomUUID(),date,voucherType:vtype,voucherNo,division:String(r.division||''),projectId:project?.id||'',projectName:project?.name||'',partyId:party?.id||'',partyName:party?.name||'',accountId:account.id,accountName:account.name,amount,debit,credit,paymentMode:String(r.paymentMode||''),bankCashAccountId:bank?.id||'',narration:String(r.narration||''),taxStatus:String(r.taxStatus||''),gstRate:r.gstRate||'',invoiceNo:String(r.invoiceNo||''),attachmentUrl:''});
+  }
+  // All-or-nothing validation: avoid partial imports from malformed files.
+  if(errors.length) return {ok:false, imported:0, errors:errors.slice(0,30)};
+  await api.sheets.spreadsheets.values.append({spreadsheetId:api.id,range:sheetRange('transactions'),valueInputOption:'RAW',insertDataOption:'INSERT_ROWS',requestBody:{values:records.map(r=>fields.transactions.map(k=>r[k]??''))}});
+  return {ok:true,imported:records.length};
+}
+
 // Mutations locate records by immutable ID, never by row number supplied by the browser.
 async function locateRow(entity, id, api) {
   if (!['accounts', 'transactions'].includes(entity)) throw new Error('Unsupported entity');
@@ -363,6 +391,8 @@ export default async function handler(req, res) {
       result = await saveStagedAccount(args[0], api);
     } else if (name === 'apiDeleteStagedAccount') {
       result = await deleteStagedAccount(args[0], api);
+    } else if (name === 'apiImportHistoricalTransactions') {
+      result = await importHistoricalTransactions(args[0], api);
     } else if (name === 'apiImportBankRows') {
       result = await importBankRows(args[0], api);
     } else if (name === 'apiReconcileBankRow') {

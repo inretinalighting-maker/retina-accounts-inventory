@@ -1,5 +1,6 @@
 import BankReconciliation from './BankReconciliation.jsx';
 import React, { useEffect, useMemo, useState } from "react";
+import HistoricalImport from "./HistoricalImport.jsx";
 
 /**
  * Retina Accounts + Inventory OS — STANDALONE DEMO
@@ -266,6 +267,7 @@ const initialTxn = {
 
 export default function RetinaAccountsInventoryOS() {
   const [view, setView] = useState("dashboard");
+  const [showHistoricalImport, setShowHistoricalImport] = useState(false);
   const [boot, setBoot] = useState(null);
   const [rows, setRows] = useState([]);
   const [dashboard, setDashboard] = useState(null);
@@ -498,6 +500,8 @@ export default function RetinaAccountsInventoryOS() {
         {loading && <div style={S.loading}>Loading…</div>}
 
         {!loading && view === "dashboard" && <Dashboard data={dashboard} onReport={generateReport} />}
+        {view === "transactions" && <div style={{marginBottom:12}}><button style={S.secondaryBtn} onClick={()=>setShowHistoricalImport(v=>!v)}>{showHistoricalImport ? "Close historical import" : "Import Old Transactions (CSV)"}</button></div>}
+        {view === "transactions" && showHistoricalImport && <HistoricalImport accounts={accounts} onImported={()=>{setShowHistoricalImport(false);loadView();}} />}
         {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} onEdit={r => { setTxn({ ...initialTxn, ...r, amount: r.amount || Number(r.debit || r.credit || 0) }); setModal({ type: "transaction" }); }} onDelete={r => deleteRow("transactions", r)} />}
         {!loading && view === "sales" && <Sales rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "purchases" && <Purchases rows={filteredRows} query={query} setQuery={setQuery} />}
