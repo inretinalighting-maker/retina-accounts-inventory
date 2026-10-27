@@ -568,9 +568,15 @@ export default function RetinaAccountsInventoryOS() {
             <Field label="GST Rate %"><input type="number" value={txn.gstRate} onChange={(e) => setTxn({ ...txn, gstRate: e.target.value })} style={S.input} /></Field>
             <Field label="Invoice / Ref No."><input value={txn.invoiceNo} onChange={(e) => setTxn({ ...txn, invoiceNo: e.target.value })} style={S.input} /></Field>
             <Field label="Narration" wide><textarea value={txn.narration} onChange={(e) => setTxn({ ...txn, narration: e.target.value })} style={{ ...S.input, minHeight: 90 }} /></Field>
-            <Field label="Attachment" wide>
-              <input type="file" onChange={(e) => uploadAttachment(e.target.files?.[0])} />
-              {txn.attachmentUrl && <div style={S.muted}>Uploaded ✓</div>}
+            <Field label="Google Drive attachment (one file per transaction)" wide>
+              <input type="url" placeholder="Paste existing Google Drive file URL (https://drive.google.com/...)" value={txn.attachmentUrl || ""}
+                onChange={(e) => setTxn(x => ({...x, attachmentUrl: e.target.value}))} style={{...S.input, width:"100%"}} />
+              <div style={{display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginTop:8}}>
+                <label>Or upload a new file: <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={(e) => uploadAttachment(e.target.files?.[0])} /></label>
+                {txn.attachmentUrl && <a href={txn.attachmentUrl} target="_blank" rel="noopener noreferrer">View attachment</a>}
+                {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => setTxn(x => ({...x, attachmentUrl:""}))}>Remove link</button>}
+              </div>
+              <div style={S.muted}>Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>
@@ -646,7 +652,7 @@ function Transactions({ rows, query, setQuery, onEdit, onDelete }) {
   return <TablePage title="Journal / Transactions" rows={rows} query={query} setQuery={setQuery} onEdit={onEdit} onDelete={onDelete}
     columns={[
       ["date","Date"],["voucherType","Type"],["voucherNo","Voucher"],["projectName","Project"],["partyName","Party"],
-      ["accountName","Account"],["debit","Debit"],["credit","Credit"],["paymentMode","Mode"],["narration","Narration"]
+      ["accountName","Account"],["debit","Debit"],["credit","Credit"],["paymentMode","Mode"],["narration","Narration"],["attachmentUrl","Attachment"]
     ]} />;
 }
 
@@ -707,7 +713,7 @@ function DataTable({ rows = [], columns = [], onEdit, onDelete }) {
       <table style={S.table}>
         <thead><tr>{columns.map(([k,l]) => <th style={S.th} key={k}>{l}</th>)}{(onEdit || onDelete) && <th style={S.th}>Actions</th>}</tr></thead>
         <tbody>
-          {rows.map((r, i) => <tr key={r.id || i}>{columns.map(([k]) => <td style={S.td} key={k}>{formatCell(k, r[k])}</td>)}{(onEdit || onDelete) && <td style={S.td}>{onEdit && <button style={S.secondaryBtn} onClick={() => onEdit(r)}>Edit</button>} {onDelete && <button style={S.secondaryBtn} onClick={() => onDelete(r)}>Delete</button>}</td>}</tr>)}
+          {rows.map((r, i) => <tr key={r.id || i}>{columns.map(([k]) => <td style={S.td} key={k}>{k === "attachmentUrl" ? (r[k] ? <a href={r[k]} target="_blank" rel="noopener noreferrer">View attachment</a> : "—") : formatCell(k, r[k])}</td>)}{(onEdit || onDelete) && <td style={S.td}>{onEdit && <button style={S.secondaryBtn} onClick={() => onEdit(r)}>Edit</button>} {onDelete && <button style={S.secondaryBtn} onClick={() => onDelete(r)}>Delete</button>}</td>}</tr>)}
           {!rows.length && <tr><td style={S.td} colSpan={Math.max(1, columns.length)}>No records</td></tr>}
         </tbody>
       </table>

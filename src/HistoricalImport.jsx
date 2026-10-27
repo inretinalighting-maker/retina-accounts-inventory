@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 
-const columns=['date','voucherType','voucherNo','division','projectName','partyName','accountName','amount','debit','credit','paymentMode','bankCashAccountName','narration','taxStatus','gstRate','invoiceNo'];
+const columns=['date','voucherType','voucherNo','division','projectName','partyName','accountName','amount','debit','credit','paymentMode','bankCashAccountName','narration','taxStatus','gstRate','invoiceNo','attachmentUrl'];
 function parseCSV(text){
   const rows=[];let row=[],cell='',quote=false;
   text=text.replace(/^\uFEFF/,'');
@@ -31,6 +31,7 @@ export default function HistoricalImport({accounts,onImported}){
       const errors=[];
       parsed.forEach((r,i)=>{
         const amount=fmt(r.amount),debit=fmt(r.debit||'0'),credit=fmt(r.credit||'0');
+        if(r.attachmentUrl && !/^https:\/\/(?:drive|docs)\.google\.com\//i.test(r.attachmentUrl))errors.push('Row '+(i+2)+': attachmentUrl must be a Google Drive or Google Docs HTTPS link');
         if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date)||!r.voucherNo||!r.voucherType||!names.has(String(r.accountName).toLowerCase())||!(amount>0)||!Number.isFinite(debit)||!Number.isFinite(credit)||((debit>0)===(credit>0))||Math.abs(amount-(debit||credit))>.01)errors.push('Row '+(i+2)+' needs valid date, voucher, live account and amount/debit/credit');
       });
       if(errors.length)throw new Error(errors.slice(0,8).join('; '));
@@ -50,10 +51,10 @@ export default function HistoricalImport({accounts,onImported}){
   function template(){const csv=columns.join(',')+'\n';const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));const a=document.createElement('a');a.href=url;a.download='retina-historical-transactions-template.csv';a.click();URL.revokeObjectURL(url);}
   return <section style={{padding:16,background:'#fff',border:'1px solid #ddd',borderRadius:10,marginBottom:16}}>
     <h3>Import historical transactions (optional)</h3>
-    <p>Upload whenever you're ready. Selecting a file only previews it; Google Sheets is updated <b>only after Confirm Import</b>. Use YYYY-MM-DD dates and exact live Chart of Accounts names. One bank debit/credit direction per row.</p>
+    <p>Upload whenever you're ready. Selecting a file only previews it; Google Sheets is updated <b>only after Confirm Import</b>. Use YYYY-MM-DD dates and exact live Chart of Accounts names. Optional attachmentUrl column accepts an existing Google Drive file link (one per transaction). One bank debit/credit direction per row.</p>
     <button onClick={template}>Download CSV template</button>{' '}<input type="file" accept=".csv,text/csv" onChange={choose}/>
     {error&&<p role="alert" style={{color:'#a00'}}>{error}</p>}{result&&<p>{result}</p>}
-    {rows.length>0&&<><p><b>{rows.length} rows ready for review</b> (showing first 10)</p><div style={{overflowX:'auto'}}><table style={{width:'100%',fontSize:12}}><thead><tr>{['date','voucherNo','voucherType','accountName','debit','credit'].map(k=><th key={k}>{k}</th>)}</tr></thead><tbody>{rows.slice(0,10).map((r,i)=><tr key={i}>{['date','voucherNo','voucherType','accountName','debit','credit'].map(k=><td key={k}>{r[k]}</td>)}</tr>)}</tbody></table></div><button disabled={busy} onClick={confirm}>{busy?'Importing…':'Confirm Import to Google Sheets'}</button></>}
+    {rows.length>0&&<><p><b>{rows.length} rows ready for review</b> (showing first 10)</p><div style={{overflowX:'auto'}}><table style={{width:'100%',fontSize:12}}><thead><tr>{['date','voucherNo','voucherType','accountName','debit','credit','attachmentUrl'].map(k=><th key={k}>{k}</th>)}</tr></thead><tbody>{rows.slice(0,10).map((r,i)=><tr key={i}>{['date','voucherNo','voucherType','accountName','debit','credit','attachmentUrl'].map(k=><td key={k}>{r[k]}</td>)}</tr>)}</tbody></table></div><button disabled={busy} onClick={confirm}>{busy?'Importing…':'Confirm Import to Google Sheets'}</button></>}
     <p style={{fontSize:12,color:'#666'}}>Kotak and IDFC CSV imports remain available separately under Reconciliation. Importing bank statements does not create accounting vouchers.</p>
   </section>;
 }

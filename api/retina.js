@@ -200,6 +200,18 @@ async function dashboard(api) {
   };
 }
 
+function validateAttachmentUrl(value) {
+  const url = String(value || '').trim();
+  if (!url) return '';
+  if (url.length > 2048) throw new Error('Attachment link is too long');
+  let parsed;
+  try { parsed = new URL(url); } catch { throw new Error('Invalid attachment URL'); }
+  if (parsed.protocol !== 'https:' || !['drive.google.com', 'docs.google.com'].includes(parsed.hostname)) {
+    throw new Error('Use an HTTPS Google Drive or Google Docs attachment link');
+  }
+  return url;
+}
+
 async function saveTransaction(payload, api) {
   if (!payload || !payload.date || !payload.accountId || !(Number(payload.amount) > 0)) {
     throw new Error('Date, account and positive amount are required');
@@ -217,6 +229,7 @@ async function saveTransaction(payload, api) {
     partyName: name(parties, payload.partyId),
     accountName: name(accounts, payload.accountId),
     debit, credit: debit ? 0 : amount,
+    attachmentUrl: validateAttachmentUrl(payload.attachmentUrl),
   };
   await api.sheets.spreadsheets.values.append({
     spreadsheetId: api.id, range: sheetRange('transactions'),
@@ -246,7 +259,7 @@ async function importHistoricalTransactions(payload, api) {
     const project=projects.find(x=>String(x.id)===String(r.projectId))||projects.find(x=>x.name===r.projectName);
     const party=parties.find(x=>String(x.id)===String(r.partyId))||parties.find(x=>x.name===r.partyName);
     const bank=banks.find(x=>String(x.id)===String(r.bankCashAccountId))||banks.find(x=>x.name===r.bankCashAccountName);
-    records.push({id:crypto.randomUUID(),date,voucherType:vtype,voucherNo,division:String(r.division||''),projectId:project?.id||'',projectName:project?.name||'',partyId:party?.id||'',partyName:party?.name||'',accountId:account.id,accountName:account.name,amount,debit,credit,paymentMode:String(r.paymentMode||''),bankCashAccountId:bank?.id||'',narration:String(r.narration||''),taxStatus:String(r.taxStatus||''),gstRate:r.gstRate||'',invoiceNo:String(r.invoiceNo||''),attachmentUrl:''});
+    records.push({id:crypto.randomUUID(),date,voucherType:vtype,voucherNo,division:String(r.division||''),projectId:project?.id||'',projectName:project?.name||'',partyId:party?.id||'',partyName:party?.name||'',accountId:account.id,accountName:account.name,amount,debit,credit,paymentMode:String(r.paymentMode||''),bankCashAccountId:bank?.id||'',narration:String(r.narration||''),taxStatus:String(r.taxStatus||''),gstRate:r.gstRate||'',invoiceNo:String(r.invoiceNo||''),attachmentUrl:validateAttachmentUrl(r.attachmentUrl)});
   }
   // All-or-nothing validation: avoid partial imports from malformed files.
   if(errors.length) return {ok:false, imported:0, errors:errors.slice(0,30)};
@@ -315,7 +328,7 @@ async function updateTransaction(payload, api) {
   const record = { ...old, ...payload, id: old.id, voucherNo: old.voucherNo, accountName: account.name,
     projectName: projects.find(p => String(p.id) === String(payload.projectId))?.name || '',
     partyName: parties.find(p => String(p.id) === String(payload.partyId))?.name || '',
-    amount, debit, credit: debit ? 0 : amount };
+    amount, debit, credit: debit ? 0 : amount, attachmentUrl: validateAttachmentUrl(payload.attachmentUrl) };
   await api.sheets.spreadsheets.values.update({ spreadsheetId: api.id, range: `'transactions'!A${row}:${columnLetter(header.length)}${row}`, valueInputOption: 'RAW', requestBody: { values: [header.map(k => record[k] ?? '')] } });
   return { ok: true, id: old.id };
 }
