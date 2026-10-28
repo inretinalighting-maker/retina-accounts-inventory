@@ -277,6 +277,7 @@ export default function RetinaAccountsInventoryOS() {
   const [err, setErr] = useState("");
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ projectId: "", division: "", from: "", to: "" });
+  const [transactionFilters, setTransactionFilters] = useState({ account: "", party: "", mode: "", type: "" });
   const [txn, setTxn] = useState(initialTxn);
   const [modal, setModal] = useState(null);
   const [stagingRows, setStagingRows] = useState([]);
@@ -347,13 +348,25 @@ export default function RetinaAccountsInventoryOS() {
     }
   }
 
+  const transactionOptions = useMemo(() => {
+    const distinct = (key) => [...new Set(rows.filter(r => !filters.division || r.division === filters.division).map(r => String(r[key] || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+    return { account: distinct("accountName"), party: distinct("partyName"), mode: distinct("paymentMode"), type: distinct("voucherType") };
+  }, [rows, filters.division]);
+
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
       if (filters.division && Object.prototype.hasOwnProperty.call(r, "division") && r.division !== filters.division) return false;
+      if (view === "transactions") {
+        if (filters.projectId && String(r.projectId || "") !== String(filters.projectId)) return false;
+        if (transactionFilters.account && String(r.accountName || "") !== transactionFilters.account) return false;
+        if (transactionFilters.party && String(r.partyName || "") !== transactionFilters.party) return false;
+        if (transactionFilters.mode && String(r.paymentMode || "") !== transactionFilters.mode) return false;
+        if (transactionFilters.type && String(r.voucherType || "") !== transactionFilters.type) return false;
+      }
       return !q || JSON.stringify(r).toLowerCase().includes(q);
     });
-  }, [rows, query, filters.division, view]);
+  }, [rows, query, filters.division, filters.projectId, transactionFilters, view]);
 
   async function refreshDashboard() {
     setLoading(true);
@@ -508,6 +521,18 @@ export default function RetinaAccountsInventoryOS() {
         {loading && <div style={S.loading}>Loading…</div>}
 
         {!loading && view === "dashboard" && <Dashboard data={dashboard} onReport={generateReport} />}
+        {view === "transactions" && <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:10,marginBottom:14,padding:"12px 14px",background:"#fff",border:"1px solid #e1e5e2",borderRadius:10}}>
+          {[["account","All Accounts","Account"],["party","All Parties","Party"],["mode","All Modes","Mode"],["type","All Types","Type"]].map(([key,placeholder,label]) => (
+            <label key={key} style={{display:"flex",flexDirection:"column",gap:4,fontSize:12,fontWeight:600,minWidth:160,flex:"1 1 160px"}}>{label}
+              <select aria-label={`${label} filter`} value={transactionFilters[key]} onChange={e=>setTransactionFilters(f=>({...f,[key]:e.target.value}))} style={S.input}>
+                <option value="">{placeholder}</option>
+                {transactionOptions[key].map(value=><option key={value} value={value}>{value}</option>)}
+              </select>
+            </label>
+          ))}
+          <button type="button" style={S.secondaryBtn} onClick={()=>{setTransactionFilters({account:"",party:"",mode:"",type:""});setFilters(f=>({...f,division:"",projectId:""}));setQuery("");}}>Clear Filters</button>
+          <span style={{fontSize:12,color:"#647067"}}>{filteredRows.length} transaction(s)</span>
+        </div>}
         {view === "transactions" && <div style={{marginBottom:12}}><button style={S.secondaryBtn} onClick={()=>setShowHistoricalImport(v=>!v)}>{showHistoricalImport ? "Close historical import" : "Import Old Transactions (CSV)"}</button></div>}
         {view === "transactions" && showHistoricalImport && <HistoricalImport accounts={accounts} divisions={DIVISIONS} onImported={()=>{setShowHistoricalImport(false);loadView();}} />}
         {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} onEdit={r => { setTxn({ ...initialTxn, ...r, amount: r.amount || Number(r.debit || r.credit || 0) }); setModal({ type: "transaction" }); }} onDelete={r => deleteRow("transactions", r)} />}
