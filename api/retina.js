@@ -252,6 +252,8 @@ async function importHistoricalTransactions(payload, api) {
     const account=accounts.find(a=>String(a.id)===String(r.accountId)) || accounts.find(a=>String(a.name).trim().toLowerCase()===String(r.accountName||'').trim().toLowerCase());
     const amount=Number(r.amount||0); const debit=Number(r.debit||0); const credit=Number(r.credit||0);
     const vtype=String(r.voucherType||'').trim();
+    const division=String(r.division||'').trim();
+    if(!['Design','Product'].includes(division)) { errors.push(`Row ${i+1}: division must be Design or Product`); continue; }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!voucherNo||!account||!(amount>0)||!vtype||(!debit&&!credit)|| (debit>0&&credit>0)) { errors.push(`Row ${i+1}: invalid date (YYYY-MM-DD), voucher, account, type, amount or debit/credit`); continue; }
     const key=voucherNo.toLowerCase();
     if(known.has(key)||seen.has(key)){errors.push(`Row ${i+1}: duplicate voucher ${voucherNo}`);continue;}
@@ -259,7 +261,7 @@ async function importHistoricalTransactions(payload, api) {
     const project=projects.find(x=>String(x.id)===String(r.projectId))||projects.find(x=>x.name===r.projectName);
     const party=parties.find(x=>String(x.id)===String(r.partyId))||parties.find(x=>x.name===r.partyName);
     const bank=banks.find(x=>String(x.id)===String(r.bankCashAccountId))||banks.find(x=>x.name===r.bankCashAccountName);
-    records.push({id:crypto.randomUUID(),date,voucherType:vtype,voucherNo,division:String(r.division||''),projectId:project?.id||'',projectName:project?.name||'',partyId:party?.id||'',partyName:party?.name||'',accountId:account.id,accountName:account.name,amount,debit,credit,paymentMode:String(r.paymentMode||''),bankCashAccountId:bank?.id||'',narration:String(r.narration||''),taxStatus:String(r.taxStatus||''),gstRate:r.gstRate||'',invoiceNo:String(r.invoiceNo||''),attachmentUrl:validateAttachmentUrl(r.attachmentUrl)});
+    records.push({id:crypto.randomUUID(),date,voucherType:vtype,voucherNo,division,projectId:project?.id||'',projectName:project?.name||'',partyId:party?.id||'',partyName:party?.name||'',accountId:account.id,accountName:account.name,amount,debit,credit,paymentMode:String(r.paymentMode||''),bankCashAccountId:bank?.id||'',narration:String(r.narration||''),taxStatus:String(r.taxStatus||''),gstRate:r.gstRate||'',invoiceNo:String(r.invoiceNo||''),attachmentUrl:validateAttachmentUrl(r.attachmentUrl)});
   }
   // All-or-nothing validation: avoid partial imports from malformed files.
   if(errors.length) return {ok:false, imported:0, errors:errors.slice(0,30)};

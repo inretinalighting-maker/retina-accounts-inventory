@@ -248,10 +248,12 @@ const run = async (name, ...args) => {
 
 // ---------------------------------------------------------------------
 
+const DIVISIONS = ["Design", "Product"];
+
 const initialTxn = {
   date: new Date().toISOString().slice(0, 10),
   voucherType: "Expense",
-  division: "Product",
+  division: "Design",
   projectId: "",
   partyId: "",
   accountId: "",
@@ -347,9 +349,11 @@ export default function RetinaAccountsInventoryOS() {
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q));
-  }, [rows, query]);
+    return rows.filter((r) => {
+      if (filters.division && Object.prototype.hasOwnProperty.call(r, "division") && r.division !== filters.division) return false;
+      return !q || JSON.stringify(r).toLowerCase().includes(q);
+    });
+  }, [rows, query, filters.division, view]);
 
   async function refreshDashboard() {
     setLoading(true);
@@ -488,6 +492,10 @@ export default function RetinaAccountsInventoryOS() {
             <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : "Live mode · Google Sheets backend"}</div>
           </div>
           <div style={S.headerActions}>
+            <select aria-label="Division filter" value={filters.division} onChange={(e) => setFilters({ ...filters, division: e.target.value })} style={S.input}>
+              <option value="">All Divisions</option>
+              {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
             <select value={filters.projectId} onChange={(e) => setFilters({ ...filters, projectId: e.target.value })} style={S.input}>
               <option value="">All Projects</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name || p.projectName || p.id}</option>)}
@@ -501,7 +509,7 @@ export default function RetinaAccountsInventoryOS() {
 
         {!loading && view === "dashboard" && <Dashboard data={dashboard} onReport={generateReport} />}
         {view === "transactions" && <div style={{marginBottom:12}}><button style={S.secondaryBtn} onClick={()=>setShowHistoricalImport(v=>!v)}>{showHistoricalImport ? "Close historical import" : "Import Old Transactions (CSV)"}</button></div>}
-        {view === "transactions" && showHistoricalImport && <HistoricalImport accounts={accounts} onImported={()=>{setShowHistoricalImport(false);loadView();}} />}
+        {view === "transactions" && showHistoricalImport && <HistoricalImport accounts={accounts} divisions={DIVISIONS} onImported={()=>{setShowHistoricalImport(false);loadView();}} />}
         {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} onEdit={r => { setTxn({ ...initialTxn, ...r, amount: r.amount || Number(r.debit || r.credit || 0) }); setModal({ type: "transaction" }); }} onDelete={r => deleteRow("transactions", r)} />}
         {!loading && view === "sales" && <Sales rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "purchases" && <Purchases rows={filteredRows} query={query} setQuery={setQuery} />}
@@ -557,7 +565,7 @@ export default function RetinaAccountsInventoryOS() {
           <form onSubmit={saveTransaction} style={S.formGrid}>
             <Field label="Date"><input type="date" value={txn.date} onChange={(e) => setTxn({ ...txn, date: e.target.value })} style={S.input} required /></Field>
             <Field label="Voucher Type"><select value={txn.voucherType} onChange={(e) => setTxn({ ...txn, voucherType: e.target.value })} style={S.input}>{VOUCHER_TYPES.map(x => <option key={x}>{x}</option>)}</select></Field>
-            <Field label="Division"><select value={txn.division} onChange={(e) => setTxn({ ...txn, division: e.target.value })} style={S.input}><option>Product</option><option>Design</option><option>Other</option></select></Field>
+            <Field label="Division"><select value={txn.division} onChange={(e) => setTxn({ ...txn, division: e.target.value })} style={S.input}>{DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}</select></Field>
             <Field label="Project"><select value={txn.projectId} onChange={(e) => setTxn({ ...txn, projectId: e.target.value })} style={S.input}><option value="">No Project</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name || p.projectName || p.id}</option>)}</select></Field>
             <Field label="Party"><select value={txn.partyId} onChange={(e) => setTxn({ ...txn, partyId: e.target.value })} style={S.input}><option value="">No Party</option>{parties.map(p => <option key={p.id} value={p.id}>{p.name || p.partyName || p.id}</option>)}</select></Field>
             <Field label="Account / Head"><select value={txn.accountId} onChange={(e) => setTxn({ ...txn, accountId: e.target.value })} style={S.input} required><option value="">Select account</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select><button type="button" style={{ ...S.secondaryBtn, marginTop: 8 }} onClick={() => { setModal(null); setView('chart'); }}>Manage Chart of Accounts →</button><div style={S.muted}>Only live accounts are available for posting. Staged accounts must be migrated after review.</div></Field>
@@ -651,7 +659,7 @@ function Dashboard({ data, onReport }) {
 function Transactions({ rows, query, setQuery, onEdit, onDelete }) {
   return <TablePage title="Journal / Transactions" rows={rows} query={query} setQuery={setQuery} onEdit={onEdit} onDelete={onDelete}
     columns={[
-      ["date","Date"],["voucherType","Type"],["voucherNo","Voucher"],["projectName","Project"],["partyName","Party"],
+      ["date","Date"],["division","Division"],["voucherType","Type"],["voucherNo","Voucher"],["projectName","Project"],["partyName","Party"],
       ["accountName","Account"],["debit","Debit"],["credit","Credit"],["paymentMode","Mode"],["narration","Narration"],["attachmentUrl","Attachment"]
     ]} />;
 }

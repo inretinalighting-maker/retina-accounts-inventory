@@ -15,11 +15,11 @@ function parseCSV(text){
   row.push(cell);if(row.some(v=>v.trim()))rows.push(row);
   if(rows.length<2)throw new Error('CSV needs a header and at least one transaction');
   const headers=rows.shift().map(v=>v.trim());
-  for(const required of ['date','voucherType','voucherNo','accountName','amount','debit','credit'])if(!headers.includes(required))throw new Error('Missing required column: '+required);
+  for(const required of ['date','voucherType','voucherNo','division','accountName','amount','debit','credit'])if(!headers.includes(required))throw new Error('Missing required column: '+required);
   return rows.map((r)=>Object.fromEntries(headers.map((h,i)=>[h,(r[i]||'').trim()])));
 }
 const fmt = v=>/^\d+(\.\d+)?$/.test(String(v||'').replace(/,/g,'')) ? Number(String(v).replace(/,/g,'')) : NaN;
-export default function HistoricalImport({accounts,onImported}){
+export default function HistoricalImport({accounts,divisions=["Design","Product"],onImported}){
   const [rows,setRows]=useState([]),[error,setError]=useState(''),[busy,setBusy]=useState(false),[result,setResult]=useState('');
   async function choose(e){
     setError('');setResult('');setRows([]);
@@ -31,6 +31,7 @@ export default function HistoricalImport({accounts,onImported}){
       const errors=[];
       parsed.forEach((r,i)=>{
         const amount=fmt(r.amount),debit=fmt(r.debit||'0'),credit=fmt(r.credit||'0');
+        if(!divisions.includes(String(r.division||'').trim()))errors.push('Row '+(i+2)+': division must be Design or Product');
         if(r.attachmentUrl && !/^https:\/\/(?:drive|docs)\.google\.com\//i.test(r.attachmentUrl))errors.push('Row '+(i+2)+': attachmentUrl must be a Google Drive or Google Docs HTTPS link');
         if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date)||!r.voucherNo||!r.voucherType||!names.has(String(r.accountName).toLowerCase())||!(amount>0)||!Number.isFinite(debit)||!Number.isFinite(credit)||((debit>0)===(credit>0))||Math.abs(amount-(debit||credit))>.01)errors.push('Row '+(i+2)+' needs valid date, voucher, live account and amount/debit/credit');
       });
@@ -51,10 +52,10 @@ export default function HistoricalImport({accounts,onImported}){
   function template(){const csv=columns.join(',')+'\n';const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));const a=document.createElement('a');a.href=url;a.download='retina-historical-transactions-template.csv';a.click();URL.revokeObjectURL(url);}
   return <section style={{padding:16,background:'#fff',border:'1px solid #ddd',borderRadius:10,marginBottom:16}}>
     <h3>Import historical transactions (optional)</h3>
-    <p>Upload whenever you're ready. Selecting a file only previews it; Google Sheets is updated <b>only after Confirm Import</b>. Use YYYY-MM-DD dates and exact live Chart of Accounts names. Optional attachmentUrl column accepts an existing Google Drive file link (one per transaction). One bank debit/credit direction per row.</p>
+    <p>Upload whenever you're ready. Selecting a file only previews it; Google Sheets is updated <b>only after Confirm Import</b>. Use YYYY-MM-DD dates, division Design or Product, and exact live Chart of Accounts names. Optional attachmentUrl column accepts an existing Google Drive file link (one per transaction). One bank debit/credit direction per row.</p>
     <button onClick={template}>Download CSV template</button>{' '}<input type="file" accept=".csv,text/csv" onChange={choose}/>
     {error&&<p role="alert" style={{color:'#a00'}}>{error}</p>}{result&&<p>{result}</p>}
-    {rows.length>0&&<><p><b>{rows.length} rows ready for review</b> (showing first 10)</p><div style={{overflowX:'auto'}}><table style={{width:'100%',fontSize:12}}><thead><tr>{['date','voucherNo','voucherType','accountName','debit','credit','attachmentUrl'].map(k=><th key={k}>{k}</th>)}</tr></thead><tbody>{rows.slice(0,10).map((r,i)=><tr key={i}>{['date','voucherNo','voucherType','accountName','debit','credit','attachmentUrl'].map(k=><td key={k}>{r[k]}</td>)}</tr>)}</tbody></table></div><button disabled={busy} onClick={confirm}>{busy?'Importing…':'Confirm Import to Google Sheets'}</button></>}
+    {rows.length>0&&<><p><b>{rows.length} rows ready for review</b> (showing first 10)</p><div style={{overflowX:'auto'}}><table style={{width:'100%',fontSize:12}}><thead><tr>{['date','division','voucherNo','voucherType','accountName','debit','credit','attachmentUrl'].map(k=><th key={k}>{k}</th>)}</tr></thead><tbody>{rows.slice(0,10).map((r,i)=><tr key={i}>{['date','division','voucherNo','voucherType','accountName','debit','credit','attachmentUrl'].map(k=><td key={k}>{r[k]}</td>)}</tr>)}</tbody></table></div><button disabled={busy} onClick={confirm}>{busy?'Importing…':'Confirm Import to Google Sheets'}</button></>}
     <p style={{fontSize:12,color:'#666'}}>Kotak and IDFC CSV imports remain available separately under Reconciliation. Importing bank statements does not create accounting vouchers.</p>
   </section>;
 }
