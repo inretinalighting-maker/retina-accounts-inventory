@@ -271,7 +271,7 @@ async function importHistoricalTransactions(payload, api) {
 
 // Mutations locate records by immutable ID, never by row number supplied by the browser.
 async function locateRow(entity, id, api) {
-  if (!['accounts', 'transactions'].includes(entity)) throw new Error('Unsupported entity');
+  if (!['accounts', 'transactions', 'parties', 'projects'].includes(entity)) throw new Error('Unsupported entity');
   if (!id) throw new Error('Record ID is required');
   const response = await api.sheets.spreadsheets.values.get({ spreadsheetId: api.id, range: sheetRange(entity) });
   const values = response.data.values || [];
@@ -300,6 +300,36 @@ async function saveAccount(payload, api) {
   await api.sheets.spreadsheets.values.append({ spreadsheetId: api.id, range: sheetRange('accounts'), valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS', requestBody: { values: [fields.accounts.map(k => ({id,name,group})[k] ?? '')] } });
   return { ok: true, id };
 }
+async function saveMaster(entity, payload, api) {
+  if (!['parties', 'projects'].includes(entity)) throw new Error('Unsupported master');
+  const name = String(payload?.name || '').trim();
+  if (!name) throw new Error('Name is required');
+  const records = await read(entity, api);
+  if (records.some(r => String(r.name || '').trim().toLowerCase() === name.toLowerCase() && String(r.id) !== String(payload.id || ''))) throw new Error('A record with this name already exists');
+  const id = payload.id ? String(payload.id) : `${entity === 'parties' ? 'PTY' : 'PRJ'}-${crypto.randomUUID()}`;
+  const record = { ...(records.find(r => String(r.id) === id) || {}), ...payload, id, name };
+  if (entity === 'projects') {
+    if (!Number.isFinite(Number(record.budget)) || Number(record.budget) < 0) throw new Error('Budget must be zero or greater');
+    record.budget = Number(record.budget || 0);
+    record.spent = Number(record.spent || 0);
+  }
+  if (payload.id) {
+    const { row, header } = await locateRow(entity, id, api);
+    await api.sheets.spreadsheets.values.update({ spreadsheetId: api.id, range: `'${entity}'!A${row}:${columnLetter(header.length)}${row}`, valueInputOption: 'RAW', requestBody: { values: [header.map(k => record[k] ?? '')] } });
+  } else {
+    const sheet = await api.sheets.spreadsheets.values.get({ spreadsheetId: api.id, range: `'${entity}'!1:1` });
+    const header = sheet.data.values?.[0] || fields[entity];
+    await api.sheets.spreadsheets.values.append({ spreadsheetId: api.id, range: sheetRange(entity), valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS', requestBody: { values: [header.map(k => record[k] ?? '')] } });
+  }
+  return { ok: true, id };
+}
+async function masterReferences(entity, record, api) {
+  const [transactions, sales, purchases, inventory] = await Promise.all(['transactions','salesInvoices','purchaseBills','inventoryMovements'].map(e => read(e, api)));
+  const idKey = entity === 'parties' ? 'partyId' : 'projectId';
+  const nameKey = entity === 'parties' ? 'partyName' : 'projectName';
+  const all = [...transactions, ...sales, ...purchases, ...inventory];
+  return all.some(r => (r[idKey] && String(r[idKey]) === String(record.id)) || (r[nameKey] && String(r[nameKey]).trim().toLowerCase() === String(record.name).trim().toLowerCase()));
+}
 function columnLetter(n) { let out = ''; while (n) { n--; out = String.fromCharCode(65 + n % 26) + out; n = Math.floor(n / 26); } return out; }
 async function sheetId(entity, api) {
   const r = await api.sheets.spreadsheets.get({ spreadsheetId: api.id, fields: 'sheets(properties(sheetId,title))' });
@@ -309,6 +339,11 @@ async function sheetId(entity, api) {
 }
 async function deleteRecord(entity, id, api) {
   const { row } = await locateRow(entity, id, api);
+  if (entity === 'parties' || entity === 'projects') {
+    const records = await read(entity, api);
+    const record = records.find(r => String(r.id) === String(id));
+    if (record && await masterReferences(entity, record, api)) throw new Error('This record is referenced by transactions, invoices, bills or inventory. It cannot be deleted.');
+  }
   if (entity === 'accounts') {
     const txns = await read('transactions', api);
     if (txns.some(t => String(t.accountId) === String(id))) throw new Error('Account is used by transactions. Delete those test transactions first or keep the account.');
@@ -416,6 +451,8 @@ export default async function handler(req, res) {
       result = await dashboard(api);
     } else if (name === 'apiList') {
       result = await read(args[0], api);
+    } else if (name === 'apiSaveMaster') {
+      result = await saveMaster(args[0], args[1], api);
     } else if (name === 'apiSaveAccount') {
       result = await saveAccount(args[0], api);
     } else if (name === 'apiUpdateTransaction') {

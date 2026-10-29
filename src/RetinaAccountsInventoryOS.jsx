@@ -283,6 +283,7 @@ export default function RetinaAccountsInventoryOS() {
   const [stagingRows, setStagingRows] = useState([]);
   const [stageForm, setStageForm] = useState({ division: '', type: '', head: '', subHead: '', newAccountId: '', accountGroup: '', migrationStatus: 'Pending Review' });
   const [stageQuery, setStageQuery] = useState('');
+  const [masterForm, setMasterForm] = useState({});
   const [accountForm, setAccountForm] = useState({ id: "", name: "", group: "" });
 
   const masters = boot?.masters || {};
@@ -400,6 +401,23 @@ export default function RetinaAccountsInventoryOS() {
     }
   }
 
+  async function saveMaster(e) {
+    e.preventDefault();
+    const entity = modal?.entity;
+    if (!['parties', 'projects'].includes(entity)) return;
+    try {
+      setLoading(true); setErr('');
+      await run('apiSaveMaster', entity, masterForm);
+      const live = await run('apiList', entity);
+      setRows(live);
+      setBoot(b => ({ ...b, masters: { ...b.masters, [entity]: live } }));
+      setModal(null); setMasterForm({});
+    } catch (e) { setErr(e.message); window.alert(e.message); } finally { setLoading(false); }
+  }
+  function openMaster(entity, record = {}) {
+    setMasterForm(entity === 'parties' ? { type: 'Customer', city: '', gstin: '', ...record } : { status: 'Active', budget: 0, spent: 0, division: '', ...record });
+    setModal({ type: 'master', entity });
+  }
   async function saveAccount(e) {
     e.preventDefault();
     try {
@@ -435,7 +453,7 @@ export default function RetinaAccountsInventoryOS() {
       await run("apiDeleteRecord", entity, row.id);
       const live = await run("apiList", entity);
       setRows(live);
-      if (entity === "accounts") setBoot(b => ({ ...b, masters: { ...b.masters, accounts: live } }));
+      if (["accounts", "parties", "projects"].includes(entity)) setBoot(b => ({ ...b, masters: { ...b.masters, [entity]: live } }));
       if (entity === "transactions") setDashboard(await run("apiDashboard", filters));
     } catch (e) { setErr(e.message); } finally { setLoading(false); }
   }
@@ -539,8 +557,8 @@ export default function RetinaAccountsInventoryOS() {
         {!loading && view === "sales" && <Sales rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "purchases" && <Purchases rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "inventory" && <Inventory rows={filteredRows} query={query} setQuery={setQuery} products={products} />}
-        {!loading && view === "parties" && <GenericTable title="Parties" rows={filteredRows} query={query} setQuery={setQuery} />}
-        {!loading && view === "projects" && <GenericTable title="Projects" rows={filteredRows} query={query} setQuery={setQuery} />}
+        {!loading && view === "parties" && <><div style={{marginBottom:12}}><button style={S.primaryBtn} onClick={() => openMaster("parties")}>+ Add Party</button></div><TablePage title="Parties" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Name"],["type","Type"],["city","City"],["gstin","GSTIN"]]} onEdit={r => openMaster("parties",r)} onDelete={r => deleteRow("parties",r)} /></>}
+        {!loading && view === "projects" && <><div style={{marginBottom:12}}><button style={S.primaryBtn} onClick={() => openMaster("projects")}>+ Add Project</button></div><TablePage title="Projects" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Name"],["division","Division"],["status","Status"],["budget","Budget"],["spent","Spent"]]} onEdit={r => openMaster("projects",r)} onDelete={r => deleteRow("projects",r)} /></>}
         {!loading && view === "bank" && <Bank rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "reconciliation" && <BankReconciliation />}
         {!loading && view === "reports" && <Reports onRun={generateReport} />}
@@ -565,6 +583,26 @@ export default function RetinaAccountsInventoryOS() {
         </>}
       </main>
 
+      {modal?.type === 'master' && (
+        <Modal title={`${masterForm.id ? 'Edit' : 'Add'} ${modal.entity === 'parties' ? 'Party' : 'Project'}`} onClose={() => setModal(null)}>
+          <form onSubmit={saveMaster} style={S.formGrid}>
+            {masterForm.id && <Field label="ID"><input readOnly value={masterForm.id} style={S.input} /></Field>}
+            <Field label="Name"><input required value={masterForm.name || ''} onChange={e => setMasterForm(v => ({...v,name:e.target.value}))} style={S.input} /></Field>
+            {modal.entity === 'parties' ? <>
+              <Field label="Party Type"><select value={masterForm.type || 'Customer'} onChange={e => setMasterForm(v => ({...v,type:e.target.value}))} style={S.input}><option>Customer</option><option>Supplier</option><option>Both</option><option>Vendor</option><option>Supplier & Customer</option></select></Field>
+              <Field label="City"><input value={masterForm.city || ''} onChange={e => setMasterForm(v => ({...v,city:e.target.value}))} style={S.input} /></Field>
+              <Field label="GSTIN"><input maxLength={15} value={masterForm.gstin || ''} onChange={e => setMasterForm(v => ({...v,gstin:e.target.value.toUpperCase()}))} style={S.input} /></Field>
+              {['address','phone','email'].map(k => <Field key={k} label={k[0].toUpperCase()+k.slice(1)}><input type={k === 'email' ? 'email' : 'text'} value={masterForm[k] || ''} onChange={e => setMasterForm(v => ({...v,[k]:e.target.value}))} style={S.input} /></Field>)}
+            </> : <>
+              <Field label="Division"><select value={masterForm.division || ''} onChange={e => setMasterForm(v => ({...v,division:e.target.value}))} style={S.input}><option value="">Not assigned</option>{DIVISIONS.map(d => <option key={d}>{d}</option>)}</select></Field>
+              <Field label="Status"><select value={masterForm.status || 'Active'} onChange={e => setMasterForm(v => ({...v,status:e.target.value}))} style={S.input}><option>Active</option><option>On Hold</option><option>Completed</option><option>Cancelled</option></select></Field>
+              <Field label="Budget"><input type="number" min="0" step="0.01" value={masterForm.budget ?? 0} onChange={e => setMasterForm(v => ({...v,budget:e.target.value}))} style={S.input} /></Field>
+              <Field label="Spent (existing value)"><input readOnly value={masterForm.spent ?? 0} style={S.input} /></Field>
+            </>}
+            <div style={{gridColumn:'1 / -1',display:'flex',gap:10,justifyContent:'flex-end'}}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>Save to Google Sheets</button></div>
+          </form>
+        </Modal>
+      )}
       {modal?.type === "account" && (
         <Modal title={accountForm.id ? "Edit Account" : "Add Account"} onClose={() => setModal(null)}>
           <form onSubmit={saveAccount} style={S.formGrid}>
