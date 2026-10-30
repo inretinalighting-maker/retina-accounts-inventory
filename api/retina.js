@@ -386,6 +386,7 @@ async function uploadBase64(payload) {
   }
 
   const { GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_REFRESH_TOKEN, GOOGLE_DRIVE_FOLDER_ID } = process.env;
+  if (!GOOGLE_DRIVE_FOLDER_ID) throw new Error('Set GOOGLE_DRIVE_FOLDER_ID in Vercel before uploading attachments');
   if (!GOOGLE_OAUTH_CLIENT_ID || !GOOGLE_OAUTH_CLIENT_SECRET || !GOOGLE_OAUTH_REFRESH_TOKEN) {
     throw new Error('Google Drive OAuth environment variables are incomplete');
   }
@@ -412,7 +413,7 @@ async function uploadBase64(payload) {
   oauth.setCredentials({ refresh_token: GOOGLE_OAUTH_REFRESH_TOKEN });
   const drive = google.drive({ version: 'v3', auth: oauth });
   const created = await drive.files.create({
-    requestBody: { name: fileName, ...(GOOGLE_DRIVE_FOLDER_ID ? { parents: [GOOGLE_DRIVE_FOLDER_ID] } : {}) },
+    requestBody: { name: fileName, parents: [GOOGLE_DRIVE_FOLDER_ID] },
     media: { mimeType, body: Readable.from(bytes) },
     fields: 'id,webViewLink',
   });

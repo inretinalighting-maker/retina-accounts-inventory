@@ -288,6 +288,9 @@ export default function RetinaAccountsInventoryOS() {
   const projects = masters.projects || [];
   const parties = masters.parties || [];
   const accounts = masters.accounts || [];
+  // Match by stable account ID, never by name. Blank division denotes a shared/legacy account.
+  const availableTxnAccounts = accounts.filter(a => !String(a.division || '').trim() ||
+    String(a.division).trim().toLowerCase() === String(txn.division || '').trim().toLowerCase());
   const bankAccounts = masters.bankAccounts || [];
   const products = masters.products || [];
 
@@ -459,12 +462,17 @@ export default function RetinaAccountsInventoryOS() {
     if (!file) return;
     setLoading(true);
     try {
+      if (!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
+        throw new Error('Choose a PDF, JPG, PNG or WEBP file of 4 MB or less');
+      }
+      const uploadPassword = window.prompt('Enter the Retina attachment upload password (configured in Vercel):');
+      if (uploadPassword === null) return;
       const base64 = await fileToBase64(file);
       const result = await run("apiUploadBase64", {
         fileName: file.name,
         mimeType: file.type || "application/octet-stream",
         base64,
-        folderKey: "ACCOUNT_ATTACHMENTS",
+        uploadPassword,
       });
       setTxn((x) => ({ ...x, attachmentUrl: result.url }));
     } catch (e) {
@@ -638,10 +646,10 @@ export default function RetinaAccountsInventoryOS() {
           <form onSubmit={saveTransaction} style={S.formGrid}>
             <Field label="Date"><input type="date" value={txn.date} onChange={(e) => setTxn({ ...txn, date: e.target.value })} style={S.input} required /></Field>
             <Field label="Voucher Type"><select value={txn.voucherType} onChange={(e) => setTxn({ ...txn, voucherType: e.target.value })} style={S.input}>{VOUCHER_TYPES.map(x => <option key={x}>{x}</option>)}</select></Field>
-            <Field label="Division"><select value={txn.division} onChange={(e) => setTxn({ ...txn, division: e.target.value })} style={S.input}>{DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}</select></Field>
+            <Field label="Division"><select value={txn.division} onChange={(e) => setTxn(x => ({ ...x, division: e.target.value, accountId: (accounts.find(a => String(a.id) === String(x.accountId))?.division || '').trim().toLowerCase() === e.target.value.toLowerCase() || !String(accounts.find(a => String(a.id) === String(x.accountId))?.division || '').trim() ? x.accountId : '' }))} style={S.input}>{DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}</select></Field>
             <Field label="Project"><select value={txn.projectId} onChange={(e) => setTxn({ ...txn, projectId: e.target.value })} style={S.input}><option value="">No Project</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name || p.projectName || p.id}</option>)}</select></Field>
             <Field label="Party"><select value={txn.partyId} onChange={(e) => setTxn({ ...txn, partyId: e.target.value })} style={S.input}><option value="">No Party</option>{parties.map(p => <option key={p.id} value={p.id}>{p.name || p.partyName || p.id}</option>)}</select></Field>
-            <Field label="Account / Head"><select value={txn.accountId} onChange={(e) => setTxn({ ...txn, accountId: e.target.value })} style={S.input} required><option value="">Select account</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select><button type="button" style={{ ...S.secondaryBtn, marginTop: 8 }} onClick={() => { setModal(null); setView('chart'); }}>Manage Chart of Accounts →</button><div style={S.muted}>Only live accounts are available for posting. Staged accounts must be migrated after review.</div></Field>
+            <Field label="Account / Head"><select value={txn.accountId} onChange={(e) => setTxn({ ...txn, accountId: e.target.value })} style={S.input} required><option value="">Select account</option>{availableTxnAccounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select><button type="button" style={{ ...S.secondaryBtn, marginTop: 8 }} onClick={() => { setModal(null); setView('chart'); }}>Manage Chart of Accounts →</button><div style={S.muted}>Showing {txn.division} and shared live accounts. Staged accounts must be migrated after review.</div></Field>
             <Field label="Amount"><input type="number" min="0" step="0.01" value={txn.amount} onChange={(e) => setTxn({ ...txn, amount: e.target.value })} style={S.input} required /></Field>
             <Field label="Payment Mode"><select value={txn.paymentMode} onChange={(e) => setTxn({ ...txn, paymentMode: e.target.value })} style={S.input}>{PAYMENT_MODES.map(x => <option key={x}>{x}</option>)}</select></Field>
             <Field label="Paid From / Received In"><select value={txn.bankCashAccountId} onChange={(e) => setTxn({ ...txn, bankCashAccountId: e.target.value })} style={S.input}><option value="">Select</option>{bankAccounts.map(a => <option key={a.id} value={a.id}>{a.name || a.accountName || a.id}</option>)}</select></Field>
@@ -657,7 +665,7 @@ export default function RetinaAccountsInventoryOS() {
                 {txn.attachmentUrl && <a href={txn.attachmentUrl} target="_blank" rel="noopener noreferrer">View attachment</a>}
                 {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => setTxn(x => ({...x, attachmentUrl:""}))}>Remove link</button>}
               </div>
-              <div style={S.muted}>Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
+              <div style={S.muted}>Upload requires the Retina upload password. Files go into InRetina Images. Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>
