@@ -465,14 +465,11 @@ export default function RetinaAccountsInventoryOS() {
       if (!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
         throw new Error('Choose a PDF, JPG, PNG or WEBP file of 4 MB or less');
       }
-      const uploadPassword = window.prompt('Enter the Retina attachment upload password (configured in Vercel):');
-      if (uploadPassword === null) return;
       const base64 = await fileToBase64(file);
       const result = await run("apiUploadBase64", {
         fileName: file.name,
         mimeType: file.type || "application/octet-stream",
         base64,
-        uploadPassword,
       });
       setTxn((x) => ({ ...x, attachmentUrl: result.url }));
     } catch (e) {
@@ -665,7 +662,7 @@ export default function RetinaAccountsInventoryOS() {
                 {txn.attachmentUrl && <a href={txn.attachmentUrl} target="_blank" rel="noopener noreferrer">View attachment</a>}
                 {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => setTxn(x => ({...x, attachmentUrl:""}))}>Remove link</button>}
               </div>
-              <div style={S.muted}>Upload requires the Retina upload password. Files go into InRetina Images. Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
+              <div style={S.muted}>Files go into InRetina Images. Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>

@@ -370,20 +370,27 @@ async function updateTransaction(payload, api) {
   return { ok: true, id: old.id };
 }
 
-function validUploadPassword(provided) {
-  const expected = process.env.RETINA_UPLOAD_PASSWORD;
-  if (!expected || typeof provided !== 'string') return false;
-  const a = crypto.createHash('sha256').update(provided).digest();
-  const b = crypto.createHash('sha256').update(expected).digest();
-  return crypto.timingSafeEqual(a, b);
-}
-
-async function uploadBase64(payload) {
-  if (!validUploadPassword(payload?.uploadPassword)) {
-    const err = new Error('Invalid or missing upload password');
-    err.status = 401;
+// Reject cross-site browser uploads. This is not a substitute for app authentication.
+function verifyUploadRequest(req) {
+  const origin = req.headers.origin;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const site = req.headers['sec-fetch-site'];
+  if (!origin || !host || !['same-origin', 'none'].includes(site)) {
+    const err = new Error('Upload must originate from the Retina website');
+    err.status = 403;
     throw err;
   }
+  let originUrl;
+  try { originUrl = new URL(origin); } catch { /* rejected below */ }
+  if (!originUrl || originUrl.protocol !== 'https:' || originUrl.host !== host) {
+    const err = new Error('Cross-origin upload is not allowed');
+    err.status = 403;
+    throw err;
+  }
+}
+
+async function uploadBase64(payload, req) {
+  verifyUploadRequest(req);
 
   const { GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_REFRESH_TOKEN, GOOGLE_DRIVE_FOLDER_ID } = process.env;
   if (!GOOGLE_DRIVE_FOLDER_ID) throw new Error('Set GOOGLE_DRIVE_FOLDER_ID in Vercel before uploading attachments');
@@ -429,7 +436,7 @@ export default async function handler(req, res) {
     const { name, args = [] } = req.body || {};
     // Do not initialize Google Sheets credentials when only uploading a file.
     if (name === 'apiUploadBase64') {
-      const result = await uploadBase64(args[0]);
+      const result = await uploadBase64(args[0], req);
       return res.status(200).json(result);
     }
     const api = client();
