@@ -366,7 +366,21 @@ async function updateTransaction(payload, api) {
     projectName: projects.find(p => String(p.id) === String(payload.projectId))?.name || '',
     partyName: parties.find(p => String(p.id) === String(payload.partyId))?.name || '',
     amount, debit, credit: debit ? 0 : amount, attachmentUrl: validateAttachmentUrl(payload.attachmentUrl) };
-  await api.sheets.spreadsheets.values.update({ spreadsheetId: api.id, range: `'transactions'!A${row}:${columnLetter(header.length)}${row}`, valueInputOption: 'RAW', requestBody: { values: [header.map(k => record[k] ?? '')] } });
+  // The sheet may have extra/reordered columns. Write by actual header name,
+  // and ensure attachmentUrl exists before updating this transaction.
+  let actualHeader = header;
+  if (!actualHeader.includes('attachmentUrl')) {
+    const column = columnLetter(actualHeader.length + 1);
+    await api.sheets.spreadsheets.values.update({spreadsheetId: api.id, range: `'transactions'!${column}1`, valueInputOption: 'RAW', requestBody: {values: [['attachmentUrl']]}});
+    actualHeader = [...actualHeader, 'attachmentUrl'];
+  }
+  await api.sheets.spreadsheets.values.update({ spreadsheetId: api.id, range: `'transactions'!A${row}:${columnLetter(actualHeader.length)}${row}`, valueInputOption: 'RAW', requestBody: { values: [actualHeader.map(k => record[k] ?? '')] } });
+  // Read back the persisted URL so an unsuccessful/misaligned write is visible.
+  if (record.attachmentUrl) {
+    const column = columnLetter(actualHeader.indexOf('attachmentUrl') + 1);
+    const verified = await api.sheets.spreadsheets.values.get({spreadsheetId: api.id, range: `'transactions'!${column}${row}`});
+    if (verified.data.values?.[0]?.[0] !== record.attachmentUrl) throw new Error('Attachment URL could not be verified in Google Sheets');
+  }
   return { ok: true, id: old.id };
 }
 

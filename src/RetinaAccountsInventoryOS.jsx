@@ -1,5 +1,5 @@
 import BankReconciliation from './BankReconciliation.jsx';
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import HistoricalImport from "./HistoricalImport.jsx";
 
 /**
@@ -284,6 +284,8 @@ export default function RetinaAccountsInventoryOS() {
   const [masterForm, setMasterForm] = useState({});
   const [accountForm, setAccountForm] = useState({ id: "", name: "", group: "" });
 
+  const attachmentUploadRef = useRef(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const masters = boot?.masters || {};
   const projects = masters.projects || [];
   const parties = masters.parties || [];
@@ -386,8 +388,13 @@ export default function RetinaAccountsInventoryOS() {
     setErr("");
     try {
       setLoading(true);
+      // Wait for any in-flight upload before constructing the transaction payload.
+      // React state updates are asynchronous; the upload result must not be lost.
+      const uploadedUrl = attachmentUploadRef.current ? await attachmentUploadRef.current : null;
+      if (uploadedUrl === false) throw new Error("Attachment upload failed. Transaction was not saved.");
+      const attachmentUrl = uploadedUrl || txn.attachmentUrl || "";
       await run(txn.id ? "apiUpdateTransaction" : "apiSave", ...(txn.id ? [] : ["transactions"]), {
-        ...txn,
+        ...txn, attachmentUrl,
         amount: Number(txn.amount || 0),
         gstRate: Number(txn.gstRate || 0),
       });
@@ -460,23 +467,29 @@ export default function RetinaAccountsInventoryOS() {
   }
   async function uploadAttachment(file) {
     if (!file) return;
-    setLoading(true);
-    try {
-      if (!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
-        throw new Error('Choose a PDF, JPG, PNG or WEBP file of 4 MB or less');
+    setErr("");
+    setUploadingAttachment(true);
+    const task = (async () => {
+      try {
+        if (!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
+          throw new Error('Choose a PDF, JPG, PNG or WEBP file of 4 MB or less');
+        }
+        const base64 = await fileToBase64(file);
+        const result = await run("apiUploadBase64", {
+          fileName: file.name, mimeType: file.type, base64,
+        });
+        if (!result?.url) throw new Error('Drive upload returned no attachment link');
+        setTxn(x => ({ ...x, attachmentUrl: result.url }));
+        return result.url;
+      } catch (e) {
+        setErr(e.message);
+        return false;
+      } finally {
+        setUploadingAttachment(false);
       }
-      const base64 = await fileToBase64(file);
-      const result = await run("apiUploadBase64", {
-        fileName: file.name,
-        mimeType: file.type || "application/octet-stream",
-        base64,
-      });
-      setTxn((x) => ({ ...x, attachmentUrl: result.url }));
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setLoading(false);
-    }
+    })();
+    attachmentUploadRef.current = task;
+    return task;
   }
 
   async function generateReport(name) {
@@ -658,15 +671,16 @@ export default function RetinaAccountsInventoryOS() {
               <input type="url" placeholder="Paste existing Google Drive file URL (https://drive.google.com/...)" value={txn.attachmentUrl || ""}
                 onChange={(e) => setTxn(x => ({...x, attachmentUrl: e.target.value}))} style={{...S.input, width:"100%"}} />
               <div style={{display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginTop:8}}>
-                <label>Or upload a new file: <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={(e) => uploadAttachment(e.target.files?.[0])} /></label>
+                <label>Or upload a new file: <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" disabled={uploadingAttachment} onChange={(e) => uploadAttachment(e.target.files?.[0])} /></label>
                 {txn.attachmentUrl && <a href={txn.attachmentUrl} target="_blank" rel="noopener noreferrer">View attachment</a>}
                 {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => setTxn(x => ({...x, attachmentUrl:""}))}>Remove link</button>}
               </div>
+              {uploadingAttachment && <div style={S.muted}>Uploading attachment to Google Drive… please wait.</div>}
               <div style={S.muted}>Files go into InRetina Images. Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>
-              <button type="submit" style={S.primaryBtn}>{txn.id ? "Update Transaction" : "Save Transaction"}</button>
+              <button type="submit" disabled={loading || uploadingAttachment} style={S.primaryBtn}>{uploadingAttachment ? "Uploading…" : (txn.id ? "Update Transaction" : "Save Transaction")}</button>
             </div>
           </form>
         </Modal>
