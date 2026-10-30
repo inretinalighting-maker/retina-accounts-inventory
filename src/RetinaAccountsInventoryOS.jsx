@@ -21,12 +21,9 @@ const NAV = [
   ["sales", "Sales"],
   ["purchases", "Purchases"],
   ["inventory", "Inventory"],
-  ["parties", "Parties"],
-  ["projects", "Projects"],
   ["bank", "Bank & Cash"],
   ["reconciliation", "Reconciliation"],
   ["reports", "Reports"],
-  ["masters", "Masters"],
   ["chart", "Chart of Accounts"],
 ];
 
@@ -269,6 +266,7 @@ const initialTxn = {
 
 export default function RetinaAccountsInventoryOS() {
   const [view, setView] = useState("dashboard");
+  const [mastersExpanded, setMastersExpanded] = useState(false);
   const [showHistoricalImport, setShowHistoricalImport] = useState(false);
   const [boot, setBoot] = useState(null);
   const [rows, setRows] = useState([]);
@@ -500,12 +498,24 @@ export default function RetinaAccountsInventoryOS() {
         </div>
 
         <nav style={S.nav}>
-          {NAV.map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setView(id)}
-              style={{ ...S.navBtn, ...(view === id ? S.navBtnActive : {}) }}
-            >
+          {NAV.filter(([id]) => id !== "chart").map(([id, label]) => (
+            <button key={id} onClick={() => setView(id)} style={{ ...S.navBtn, ...(view === id ? S.navBtnActive : {}) }}>
+              {label}
+            </button>
+          ))}
+          <button aria-expanded={mastersExpanded} onClick={() => setMastersExpanded(v => !v)}
+            style={{ ...S.navBtn, ...( ["chart", "parties", "projects"].includes(view) ? S.navBtnActive : {}), display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Masters</span><span aria-hidden="true">{mastersExpanded ? "▾" : "▸"}</span>
+          </button>
+          {mastersExpanded && [
+            ["chart", "Chart of Accounts"],
+            ["parties", "Parties — Customers & Suppliers"],
+            ["projects", "Projects — Design & Product"],
+            ["inventory", "Products & Inventory"],
+            ["bank", "Bank & Cash Accounts"],
+          ].map(([id, label]) => (
+            <button key={`master-${id}`} onClick={() => setView(id)}
+              style={{ ...S.navBtn, paddingLeft: 25, fontSize: 13, ...(view === id ? S.navBtnActive : {}) }}>
               {label}
             </button>
           ))}
@@ -519,7 +529,7 @@ export default function RetinaAccountsInventoryOS() {
       <main style={S.main}>
         <header style={S.header}>
           <div>
-            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || "Retina OS"}</h1>
+            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects" }[view]) || "Retina OS"}</h1>
             <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : "Live mode · Google Sheets backend"}</div>
           </div>
           <div style={S.headerActions}>
