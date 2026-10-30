@@ -278,6 +278,7 @@ export default function RetinaAccountsInventoryOS() {
   const [transactionFilters, setTransactionFilters] = useState({ account: "", party: "", mode: "", type: "" });
   const [txn, setTxn] = useState(initialTxn);
   const [modal, setModal] = useState(null);
+  const [activeReport, setActiveReport] = useState(null);
   const [stagingRows, setStagingRows] = useState([]);
   const [stageForm, setStageForm] = useState({ division: '', type: '', head: '', subHead: '', newAccountId: '', accountGroup: '', migrationStatus: 'Pending Review' });
   const [stageQuery, setStageQuery] = useState('');
@@ -496,7 +497,8 @@ export default function RetinaAccountsInventoryOS() {
     setLoading(true);
     try {
       const data = await run("apiReport", name, filters);
-      setModal({ type: "report", title: name, data });
+      setActiveReport({ title: name, data });
+      setView("report-detail");
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -545,7 +547,7 @@ export default function RetinaAccountsInventoryOS() {
       </aside>
 
       <main style={S.main}>
-        <header style={S.header}>
+        {view !== "report-detail" && <header style={S.header}>
           <div>
             <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects" }[view]) || "Retina OS"}</h1>
             <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : "Live mode · Google Sheets backend"}</div>
@@ -561,7 +563,9 @@ export default function RetinaAccountsInventoryOS() {
             </select>
             <button style={S.secondaryBtn} onClick={view === "dashboard" ? refreshDashboard : loadView}>Refresh</button>
           </div>
-        </header>
+        </header>}
+
+        {view === "report-detail" && activeReport && <ReportPage report={activeReport} onBack={() => { setActiveReport(null); setView("reports"); }} />}
 
         {err && <div style={S.error}>{err}</div>}
         {loading && <div style={S.loading}>Loading…</div>}
@@ -686,11 +690,7 @@ export default function RetinaAccountsInventoryOS() {
         </Modal>
       )}
 
-      {modal?.type === "report" && (
-        <Modal title={modal.title} onClose={() => setModal(null)} wide>
-          <ReportViewer data={modal.data} />
-        </Modal>
-      )}
+
     </div>
   );
 }
@@ -826,6 +826,89 @@ function formatCell(key, v) {
   if (/date/i.test(key)) return fmtDate(v);
   if (/amount|debit|credit|total|balance|gst|sales|purchase|expense|profit|received|outstanding|value/i.test(key) && !Number.isNaN(Number(v))) return money(v);
   return String(v);
+}
+
+
+// A shared full-page report viewer, used by every report (including dashboard shortcuts).
+function reportExportRows(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.lines)) return data.lines;
+  if (Array.isArray(data?.rows)) return data.rows;
+  return Object.entries(data || {}).filter(([key, value]) => typeof value !== "object" && value !== undefined).map(([field, value]) => ({ field, value }));
+}
+function reportExportMeta(data) {
+  const meta = [];
+  if (data?.status) meta.push(["Status", data.status]);
+  if (data?.filters) meta.push(...Object.entries(data.filters).map(([k,v]) => [k, String(v ?? "")]));
+  if (data?.totalIncome !== undefined) meta.push(["Total income", data.totalIncome]);
+  if (data?.totalExpenses !== undefined) meta.push(["Total expenses", data.totalExpenses]);
+  if (data?.provisionalProfitOrLoss !== undefined) meta.push(["Provisional profit / loss", data.provisionalProfitOrLoss]);
+  if (data?.transactionsReviewed !== undefined) meta.push(["Transactions reviewed", data.transactionsReviewed]);
+  if (data?.excludedTransactions !== undefined) meta.push(["Excluded transactions", data.excludedTransactions]);
+  if (data?.limitations) meta.push(["Limitations", data.limitations]);
+  if (data?.note) meta.push(["Note", data.note]);
+  return meta;
+}
+function ReportPage({ report, onBack }) {
+  const [exportError, setExportError] = useState("");
+  const rows = reportExportRows(report.data);
+  const meta = reportExportMeta(report.data);
+  const filename = report.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-report";
+  async function downloadExcel() {
+    try {
+      setExportError("");
+      const XLSX = await import("xlsx");
+      const sheet = XLSX.utils.aoa_to_sheet([["RETINA Accounts + Inventory OS"], [report.title], [], ...meta, [], ["Report data"]]);
+      XLSX.utils.sheet_add_json(sheet, rows, { origin: -1, skipHeader: false });
+      sheet["!cols"] = Array.from({ length: Math.max(2, Object.keys(rows[0] || {}).length) }, () => ({ wch: 25 }));
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "Report");
+      XLSX.writeFile(book, filename + ".xlsx");
+    } catch (e) { setExportError("Excel export failed: " + e.message); }
+  }
+  async function downloadPdf() {
+    try {
+      setExportError("");
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const width = 190;
+      let y = 17;
+      function line(text, bold = false) {
+        doc.setFont("helvetica", bold ? "bold" : "normal");
+        doc.setFontSize(bold ? 12 : 9);
+        const parts = doc.splitTextToSize(String(text ?? ""), width);
+        for (const part of parts) {
+          if (y > 275) { doc.addPage(); y = 17; }
+          doc.text(part, 10, y); y += bold ? 7 : 5;
+        }
+      }
+      line("RETINA Accounts + Inventory OS", true);
+      line(report.title, true); y += 2;
+      for (const [k, v] of meta) line(k + ": " + v);
+      y += 3;
+      const cols = Object.keys(rows[0] || {});
+      if (cols.length) {
+        line(cols.join(" | "), true);
+        for (const row of rows) line(cols.map(c => String(row[c] ?? "")).join(" | "));
+      } else line("No report rows available.");
+      doc.save(filename + ".pdf");
+    } catch (e) { setExportError("PDF export failed: " + e.message); }
+  }
+  return <section className="retina-report-page" style={{ background: "#fff", padding: 24, borderRadius: 12, minHeight: "75vh" }}>
+    <style>{`@media print { body * { visibility: hidden !important; } .retina-report-page, .retina-report-page * { visibility: visible !important; } .retina-report-page { position: absolute !important; top: 0; left: 0; width: 100% !important; padding: 12mm !important; } .retina-report-actions { display: none !important; } table { break-inside: auto; } tr { break-inside: avoid; } }`}</style>
+    <div className="retina-report-actions" style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "space-between", marginBottom: 24 }}>
+      <button style={S.secondaryBtn} onClick={onBack}>← Back to Reports</button>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button style={S.secondaryBtn} onClick={downloadPdf}>Download PDF</button>
+        <button style={S.secondaryBtn} onClick={downloadExcel}>Download Excel (.xlsx)</button>
+        <button style={S.primaryBtn} onClick={() => window.print()}>Print</button>
+      </div>
+    </div>
+    <h1 style={{ marginBottom: 8 }}>{report.title}</h1>
+    <div style={{ color: "#647067", marginBottom: 20 }}>RETINA Accounts + Inventory OS</div>
+    {exportError && <div role="alert" style={{ color: "#b42318", marginBottom: 12 }}>{exportError}</div>}
+    <ReportViewer data={report.data} />
+  </section>;
 }
 
 function ReportViewer({ data }) {
