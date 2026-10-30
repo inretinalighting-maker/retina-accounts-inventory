@@ -705,7 +705,7 @@ function Dashboard({ data, onReport }) {
     ["Receivables", d.receivables],
     ["Payables", d.payables],
     ["Inventory", d.inventoryValue],
-    ["Net Profit", d.netProfit],
+    ["Net Profit (unverified)", null],
   ];
   return (
     <>
@@ -713,7 +713,7 @@ function Dashboard({ data, onReport }) {
         {cards.map(([label, value]) => (
           <div key={label} style={S.card}>
             <div style={S.cardLabel}>{label}</div>
-            <div style={S.cardValue}>{money(value)}</div>
+            <div style={S.cardValue}>{value == null ? "Not verified" : money(value)}</div>
           </div>
         ))}
       </section>
@@ -831,6 +831,18 @@ function formatCell(key, v) {
 function ReportViewer({ data }) {
   if (!data) return <div>No data</div>;
   if (Array.isArray(data)) return <GenericReportTable rows={data} />;
+  if (data.status?.startsWith("PROVISIONAL") && Array.isArray(data.lines)) return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <strong>{data.status}</strong>
+      <div>Division: {data.filters.division} | Project: {data.filters.projectId} | From: {data.filters.from} | To: {data.filters.to}</div>
+      <GenericReportTable rows={data.lines} />
+      <div><strong>Total income:</strong> {money(data.totalIncome)}</div>
+      <div><strong>Total expenses:</strong> {money(data.totalExpenses)}</div>
+      <div><strong>Provisional profit / (loss):</strong> {money(data.provisionalProfitOrLoss)}</div>
+      <div><strong>Transactions reviewed:</strong> {data.transactionsReviewed} | <strong>Excluded:</strong> {data.excludedTransactions} (amount {money(data.excludedTransactionAmount)})</div>
+      <p style={{ fontSize: 13 }}>{data.limitations}</p>
+    </div>
+  );
   if (Array.isArray(data.rows)) return <GenericReportTable rows={data.rows} />;
   return <pre style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(data, null, 2)}</pre>;
 }

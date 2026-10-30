@@ -200,6 +200,55 @@ async function dashboard(api) {
   };
 }
 
+// Provisional transaction-ledger P&L. Does not imply accrual/double-entry completeness.
+async function profitAndLoss(api, filters = {}) {
+  const [transactions, accounts] = await Promise.all([read('transactions', api), read('accounts', api)]);
+  const byId = new Map(accounts.filter(a => a.id).map(a => [String(a.id), a]));
+  const byName = new Map();
+  for (const a of accounts) {
+    const key = String(a.name || '').trim().toLowerCase();
+    if (!key) continue;
+    if (byName.has(key)) byName.set(key, null); // ambiguous names must not be guessed
+    else byName.set(key, a);
+  }
+  const included = transactions.filter(t =>
+    (!filters.division || t.division === filters.division) &&
+    (!filters.projectId || String(t.projectId) === String(filters.projectId)) &&
+    (!filters.from || String(t.date || '') >= filters.from) &&
+    (!filters.to || String(t.date || '') <= filters.to)
+  );
+  const grouped = new Map();
+  let excluded = 0, excludedAmount = 0, income = 0, expenses = 0;
+  const round = n => Math.round(n * 100) / 100;
+  for (const t of included) {
+    const a = byId.get(String(t.accountId || '')) || byName.get(String(t.accountName || '').trim().toLowerCase());
+    const group = String(a?.group || '').trim().toLowerCase();
+    const category = /income|revenue|sales/.test(group) ? 'Income' : /expense|expenditure|cost of goods|cost of sales/.test(group) ? 'Expense' : '';
+    const debit = Number(t.debit || 0), credit = Number(t.credit || 0);
+    if (!category || !Number.isFinite(debit) || !Number.isFinite(credit) || (debit === 0 && credit === 0)) {
+      excluded++;
+      excludedAmount += Math.abs(Number(t.amount || debit || credit || 0));
+      continue;
+    }
+    const amount = category === 'Income' ? credit - debit : debit - credit;
+    const key = `${category}:${a.id}`;
+    const entry = grouped.get(key) || { section: category, account: a.name, amount: 0 };
+    entry.amount += amount;
+    grouped.set(key, entry);
+    if (category === 'Income') income += amount;
+    else expenses += amount;
+  }
+  return {
+    status: 'PROVISIONAL — transaction-based, not audited',
+    basis: 'Posted transaction debits/credits classified by live Chart of Accounts group; reversals reduce totals.',
+    filters: { division: filters.division || 'All', projectId: filters.projectId || 'All', from: filters.from || 'All', to: filters.to || 'All' },
+    lines: [...grouped.values()].sort((a,b) => a.section.localeCompare(b.section) || a.account.localeCompare(b.account)).map(r => ({...r, amount: round(r.amount)})),
+    totalIncome: round(income), totalExpenses: round(expenses), provisionalProfitOrLoss: round(income - expenses),
+    transactionsReviewed: included.length, excludedTransactions: excluded, excludedTransactionAmount: round(excludedAmount),
+    limitations: 'Not a statutory/accrual P&L. Sales invoices, purchase bills, inventory/COGS, GST adjustments, depreciation, opening balances and accruals are not reconciled here. Unclassified or ambiguous accounts are excluded to prevent guessing. Review account groups and excluded transactions before relying on this figure.'
+  };
+}
+
 function validateAttachmentUrl(value) {
   const url = String(value || '').trim();
   if (!url) return '';
@@ -485,7 +534,8 @@ export default async function handler(req, res) {
       result = await saveTransaction(args[1], api);
     } else if (name === 'apiReport') {
       const [sales, purchases] = await Promise.all(['salesInvoices','purchaseBills'].map(k => read(k, api)));
-      if (args[0] === 'Receivables Aging') result = sales.filter(x => Number(x.outstanding) > 0);
+      if (args[0] === 'Profit & Loss') result = await profitAndLoss(api, args[1] || {});
+      else if (args[0] === 'Receivables Aging') result = sales.filter(x => Number(x.outstanding) > 0);
       else if (args[0] === 'Payables Aging') result = purchases.filter(x => Number(x.outstanding) > 0);
       else if (args[0] === 'Inventory Valuation') result = await read('inventoryMovements', api);
       else result = { note: `${args[0]} report needs accounting logic before production use.` };
