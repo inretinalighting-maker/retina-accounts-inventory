@@ -179,18 +179,83 @@ async function reconcileBankRow(payload,api) {
   return {ok:true,status:updated.reconStatus};
 }
 
+
+// Separate opening ledger. Never post these balances to income/expense transactions.
+const OPENING_HEADERS = ['id','date','division','accountId','accountName','accountType','debit','credit'];
+const OPENING_TYPES = ['Asset','Liability','Equity'];
+const openingDate = value => {
+  const v = String(value || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || new Date(v + 'T00:00:00Z').toISOString().slice(0,10) !== v) throw new Error('Enter a valid opening date');
+  return v;
+};
+async function ensureOpeningSheet(api) {
+  const metadata = await api.sheets.spreadsheets.get({spreadsheetId:api.id,fields:'sheets.properties.title'});
+  if (!(metadata.data.sheets || []).some(x => x.properties.title === 'openingBalances')) {
+    await api.sheets.spreadsheets.batchUpdate({spreadsheetId:api.id,requestBody:{requests:[{addSheet:{properties:{title:'openingBalances'}}}]}});
+  }
+  const r = await api.sheets.spreadsheets.values.get({spreadsheetId:api.id,range:"'openingBalances'!A1:H1"});
+  const existing = r.data.values?.[0] || [];
+  if (!existing.length) await api.sheets.spreadsheets.values.update({spreadsheetId:api.id,range:"'openingBalances'!A1:H1",valueInputOption:'RAW',requestBody:{values:[OPENING_HEADERS]}});
+  else if (OPENING_HEADERS.some((x,i) => existing[i] !== x)) throw new Error('openingBalances header mismatch; no changes made');
+}
+async function listOpening(api) {
+  await ensureOpeningSheet(api);
+  const r = await api.sheets.spreadsheets.values.get({spreadsheetId:api.id,range:"'openingBalances'!A2:H"});
+  return (r.data.values || []).filter(x=>x[0]).map(x=>Object.fromEntries(OPENING_HEADERS.map((k,i)=>[k, k==='debit'||k==='credit'?Number(x[i]||0):String(x[i]||'')])));
+}
+async function saveOpening(payload, api) {
+  const date = openingDate(payload?.date);
+  const division = String(payload?.division || '').trim();
+  if (!['Design','Product','Shared'].includes(division)) throw new Error('Choose Design, Product or Shared');
+  const input = payload?.rows;
+  if (!Array.isArray(input) || !input.length || input.length > 100) throw new Error('Enter 1–100 opening balance lines');
+  const accounts = await read('accounts',api);
+  const accountMap = new Map(accounts.map(a=>[String(a.id),a]));
+  const seen = new Set(); let debit=0,credit=0;
+  const rows = input.map(raw=>{
+    const accountId=String(raw.accountId||'');
+    const account=accountMap.get(accountId);
+    if (!account) throw new Error('Choose an approved account for every opening balance');
+    if (seen.has(accountId)) throw new Error('Duplicate opening account: '+account.name);
+    seen.add(accountId);
+    const accountType=String(raw.accountType||'');
+    if (!OPENING_TYPES.includes(accountType)) throw new Error('Choose Asset, Liability or Equity');
+    const d=Number(raw.debit||0),c=Number(raw.credit||0);
+    if (![d,c].every(Number.isFinite)||d<0||c<0||(d>0&&c>0)||(d===0&&c===0)) throw new Error('Enter one positive debit or credit per account');
+    debit+=d;credit+=c;
+    return {id:`OB-${crypto.randomUUID()}`,date,division,accountId,accountName:String(account.name||''),accountType,debit:d,credit:c};
+  });
+  if (Math.abs(debit-credit)>0.009) throw new Error(`Opening balances do not balance: debit ${debit.toFixed(2)}, credit ${credit.toFixed(2)}`);
+  const existing=await listOpening(api);
+  if (existing.some(x=>x.date===date&&x.division===division)) throw new Error('Opening balances already exist for this date and division. No changes made; contact administrator before replacing posted balances.');
+  await api.sheets.spreadsheets.values.append({spreadsheetId:api.id,range:"'openingBalances'!A:H",valueInputOption:'RAW',insertDataOption:'INSERT_ROWS',requestBody:{values:rows.map(r=>OPENING_HEADERS.map(k=>r[k]))}});
+  return {ok:true,date,division,lines:rows.length,totalDebit:debit,totalCredit:credit};
+}
+function applicableOpening(rows, filters={}) {
+  const asOf=filters.to||new Date().toISOString().slice(0,10);
+  const from=filters.from||'';
+  return rows.filter(r=>r.date<=asOf && (!filters.division||r.division===filters.division||r.division==='Shared') && (!from||r.date<=asOf));
+}
+function openingReport(rows,filters={},title='Opening Balances') {
+  const entries=applicableOpening(rows,filters);
+  return {status:'PROVISIONAL — opening balances only, not a full ledger',report:title,asOf:filters.to||new Date().toISOString().slice(0,10),lines:entries.map(r=>({date:r.date,division:r.division,account:r.accountName,type:r.accountType,debit:r.debit,credit:r.credit})),totalDebit:sum(entries,'debit'),totalCredit:sum(entries,'credit'),limitations:'Opening balances only. Subsequent transactions, invoices, inventory and double-entry posting are not yet incorporated into this report.'};
+}
+
 const sum = (arr, key) => arr.reduce((n, x) => n + Number(x[key] || 0), 0);
 
-async function dashboard(api) {
-  const [sales, purchases, transactions, banks, recon, inventory] = await Promise.all(
-    ['salesInvoices','purchaseBills','transactions','bankTransactions','reconciliation','inventoryMovements'].map(n => read(n, api))
+async function dashboard(api, filters = {}) {
+  const [sales, purchases, transactions, banks, recon, inventory, opening] = await Promise.all(
+    ['salesInvoices','purchaseBills','transactions','bankTransactions','reconciliation','inventoryMovements'].map(n => read(n, api)).concat([listOpening(api)])
   );
+  const openingRows = applicableOpening(opening, filters);
+  const openingAmount = pattern => openingRows.filter(x=>pattern.test(x.accountName.toLowerCase())).reduce((n,x)=>n+x.debit-x.credit,0);
   const monthSales = sum(sales, 'total');
   const monthPurchases = sum(purchases, 'total');
   const monthExpenses = sum(transactions.filter(t => ['Expense','Payment'].includes(t.voucherType)), 'debit');
   const grossProfit = monthSales - monthPurchases;
   return {
-    cashBalance: 0, kotakBalance: 0, idfcBalance: 0, fdBalance: 0,
+    cashBalance: openingAmount(/cash in hand|cash account/), kotakBalance: openingAmount(/kotak/), idfcBalance: openingAmount(/idfc/), fdBalance: openingAmount(/fixed deposit|\bfd\b|deposit/),
+    openingBalanceOnly: true, openingAsOf: filters.to || new Date().toISOString().slice(0,10),
     receivables: sum(sales, 'outstanding'), payables: sum(purchases, 'outstanding'),
     inventoryValue: 0, netProfit: grossProfit - monthExpenses,
     monthSales, monthPurchases, monthExpenses, grossProfit,
@@ -518,8 +583,12 @@ export default async function handler(req, res) {
       result = await importBankRows(args[0], api);
     } else if (name === 'apiReconcileBankRow') {
       result = await reconcileBankRow(args[0], api);
+    } else if (name === 'apiListOpeningBalances') {
+      result = await listOpening(api);
+    } else if (name === 'apiSaveOpeningBalances') {
+      result = await saveOpening(args[0],api);
     } else if (name === 'apiDashboard') {
-      result = await dashboard(api);
+      result = await dashboard(api, args[0] || {});
     } else if (name === 'apiList') {
       result = await read(args[0], api);
     } else if (name === 'apiSaveMaster') {
@@ -538,6 +607,7 @@ export default async function handler(req, res) {
       else if (args[0] === 'Receivables Aging') result = sales.filter(x => Number(x.outstanding) > 0);
       else if (args[0] === 'Payables Aging') result = purchases.filter(x => Number(x.outstanding) > 0);
       else if (args[0] === 'Inventory Valuation') result = await read('inventoryMovements', api);
+      else if (['Trial Balance','Balance Sheet','Cash Flow','Bank Book','Cash Book'].includes(args[0])) result = openingReport(await listOpening(api),args[1] || {},args[0]);
       else result = { note: `${args[0]} report needs accounting logic before production use.` };
     } else {
       return res.status(400).json({ error: 'Unsupported operation' });

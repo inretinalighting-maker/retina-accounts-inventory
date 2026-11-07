@@ -279,6 +279,7 @@ export default function RetinaAccountsInventoryOS() {
   const [txn, setTxn] = useState(initialTxn);
   const [modal, setModal] = useState(null);
   const [activeReport, setActiveReport] = useState(null);
+  const [openingRows, setOpeningRows] = useState([]);
   const [stagingRows, setStagingRows] = useState([]);
   const [stageForm, setStageForm] = useState({ division: '', type: '', head: '', subHead: '', newAccountId: '', accountGroup: '', migrationStatus: 'Pending Review' });
   const [stageQuery, setStageQuery] = useState('');
@@ -339,6 +340,7 @@ export default function RetinaAccountsInventoryOS() {
         chart: "accounts",
       };
       if (view === "reports") return;
+      if (view === "opening") { setOpeningRows(await run("apiListOpeningBalances")); return; }
       if (view === "masters" || view === "chart") {
         const [live, staging] = await Promise.all([run("apiList", "accounts"), run("apiStagingAccounts")]);
         setRows(live);
@@ -529,6 +531,7 @@ export default function RetinaAccountsInventoryOS() {
           </button>
           {mastersExpanded && [
             ["chart", "Chart of Accounts"],
+            ["opening", "Opening Balances"],
             ["parties", "Parties — Customers & Suppliers"],
             ["projects", "Projects — Design & Product"],
             ["inventory", "Products & Inventory"],
@@ -549,7 +552,7 @@ export default function RetinaAccountsInventoryOS() {
       <main style={S.main}>
         {view !== "report-detail" && <header style={S.header}>
           <div>
-            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects" }[view]) || "Retina OS"}</h1>
+            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects", opening: "Opening Balances" }[view]) || "Retina OS"}</h1>
             <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : "Live mode · Google Sheets backend"}</div>
           </div>
           <div style={S.headerActions}>
@@ -561,6 +564,8 @@ export default function RetinaAccountsInventoryOS() {
               <option value="">All Projects</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name || p.projectName || p.id}</option>)}
             </select>
+            <label style={{fontSize:12}}>From <input aria-label="Report from date" type="date" value={filters.from} onChange={e=>setFilters(f=>({...f,from:e.target.value}))} style={S.input}/></label>
+            <label style={{fontSize:12}}>As of / To <input aria-label="Report to date" type="date" value={filters.to} onChange={e=>setFilters(f=>({...f,to:e.target.value}))} style={S.input}/></label>
             <button style={S.secondaryBtn} onClick={view === "dashboard" ? refreshDashboard : loadView}>Refresh</button>
           </div>
         </header>}
@@ -571,6 +576,7 @@ export default function RetinaAccountsInventoryOS() {
         {loading && <div style={S.loading}>Loading…</div>}
 
         {!loading && view === "dashboard" && <Dashboard data={dashboard} onReport={generateReport} />}
+        {!loading && view === "opening" && <OpeningBalances accounts={accounts} rows={openingRows} onSaved={async()=>{setOpeningRows(await run("apiListOpeningBalances")); await refreshDashboard();}} />}
         {view === "transactions" && <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:10,marginBottom:14,padding:"12px 14px",background:"#fff",border:"1px solid #e1e5e2",borderRadius:10}}>
           {[["account","All Accounts","Account"],["party","All Parties","Party"],["mode","All Modes","Mode"],["type","All Types","Type"]].map(([key,placeholder,label]) => (
             <label key={key} style={{display:"flex",flexDirection:"column",gap:4,fontSize:12,fontWeight:600,minWidth:160,flex:"1 1 160px"}}>{label}
@@ -695,6 +701,46 @@ export default function RetinaAccountsInventoryOS() {
   );
 }
 
+function OpeningBalances({accounts,rows,onSaved}) {
+  const [date,setDate]=useState('2025-04-01');
+  const [division,setDivision]=useState('Design');
+  const [lines,setLines]=useState([{accountId:'',accountType:'Asset',debit:'',credit:''}]);
+  const [error,setError]=useState('');
+  const [busy,setBusy]=useState(false);
+  const total=k=>lines.reduce((n,r)=>n+Number(r[k]||0),0);
+  const edit=(i,k,v)=>setLines(old=>old.map((r,j)=>i===j?{...r,[k]:v}:r));
+  const save=async()=>{
+    setError('');setBusy(true);
+    try {await run('apiSaveOpeningBalances',{date,division,rows:lines});await onSaved();setLines([{accountId:'',accountType:'Asset',debit:'',credit:''}]);}
+    catch(e){setError(e.message)} finally{setBusy(false)}
+  };
+  return <section style={S.panel}>
+    <h3>Opening Balances — separate from income and expenses</h3>
+    <p style={{fontSize:13}}>Select any financial opening date. Enter all debit and credit lines for one division together; totals must match. Saved batches cannot be overwritten automatically.</p>
+    <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:15}}>
+      <label>Opening date <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={S.input}/></label>
+      <label>Division <select value={division} onChange={e=>setDivision(e.target.value)} style={S.input}><option>Design</option><option>Product</option><option>Shared</option></select></label>
+    </div>
+    <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th>Account</th><th>Type</th><th>Debit ₹</th><th>Credit ₹</th><th></th></tr></thead><tbody>
+      {lines.map((r,i)=><tr key={i}>
+        <td><select value={r.accountId} onChange={e=>edit(i,'accountId',e.target.value)} style={S.input}><option value="">Choose account</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name} ({a.id})</option>)}</select></td>
+        <td><select value={r.accountType} onChange={e=>edit(i,'accountType',e.target.value)} style={S.input}>{['Asset','Liability','Equity'].map(t=><option key={t}>{t}</option>)}</select></td>
+        <td><input type="number" min="0" step="0.01" value={r.debit} onChange={e=>edit(i,'debit',e.target.value)} style={{...S.input,width:125}}/></td>
+        <td><input type="number" min="0" step="0.01" value={r.credit} onChange={e=>edit(i,'credit',e.target.value)} style={{...S.input,width:125}}/></td>
+        <td><button type="button" style={S.secondaryBtn} onClick={()=>setLines(v=>v.filter((_,j)=>j!==i))} disabled={lines.length===1}>Remove</button></td>
+      </tr>)}</tbody></table></div>
+    <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'center',marginTop:14}}>
+      <button type="button" style={S.secondaryBtn} onClick={()=>setLines(v=>[...v,{accountId:'',accountType:'Asset',debit:'',credit:''}])}>+ Add Line</button>
+      <strong>Total Debit: {money(total('debit'))} | Total Credit: {money(total('credit'))}</strong>
+      <button type="button" style={S.primaryBtn} disabled={busy||Math.abs(total('debit')-total('credit'))>0.009||!total('debit')} onClick={save}>{busy?'Saving…':'Post Opening Balances'}</button>
+    </div>
+    {error&&<div style={S.error}>{error}</div>}
+    <h3 style={{marginTop:24}}>Saved Opening Balances</h3>
+    <GenericReportTable rows={rows.map(r=>({date:r.date,division:r.division,account:r.accountName,type:r.accountType,debit:r.debit,credit:r.credit}))}/>
+    <p style={{fontSize:12}}>Opening balances are not profit or loss. Cash and bank dashboard cards show opening amounts only until a complete double-entry running balance is implemented.</p>
+  </section>;
+}
+
 function Dashboard({ data, onReport }) {
   const d = data || {};
   const cards = [
@@ -709,6 +755,7 @@ function Dashboard({ data, onReport }) {
   ];
   return (
     <>
+      {d.openingBalanceOnly && <p style={{fontSize:12,color:"#855e00"}}>Cash and bank figures show opening balances only as of {d.openingAsOf}; subsequent transactions are not yet reconciled into running balances.</p>}
       <section style={S.cardGrid}>
         {cards.map(([label, value]) => (
           <div key={label} style={S.card}>
@@ -914,6 +961,7 @@ function ReportPage({ report, onBack }) {
 function ReportViewer({ data }) {
   if (!data) return <div>No data</div>;
   if (Array.isArray(data)) return <GenericReportTable rows={data} />;
+  if (data.status?.startsWith("PROVISIONAL — opening") && Array.isArray(data.lines)) return <div><strong>{data.status}</strong><p>As of {data.asOf}</p><GenericReportTable rows={data.lines}/><p>Total debit: {money(data.totalDebit)} | Total credit: {money(data.totalCredit)}</p><p>{data.limitations}</p></div>;
   if (data.status?.startsWith("PROVISIONAL") && Array.isArray(data.lines)) return (
     <div style={{ display: "grid", gap: 12 }}>
       <strong>{data.status}</strong>
