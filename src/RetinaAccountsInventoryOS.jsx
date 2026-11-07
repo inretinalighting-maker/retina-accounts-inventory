@@ -819,8 +819,39 @@ function Inventory({ rows, query, setQuery }) {
 }
 
 function Bank({ rows, query, setQuery }) {
-  return <TablePage title="Bank & Cash Transactions" rows={rows} query={query} setQuery={setQuery}
-    columns={[["date","Date"],["accountName","Account"],["description","Description"],["debit","Debit"],["credit","Credit"],["balance","Balance"],["reference","Reference"],["reconStatus","Status"]]} />;
+  const [account, setAccount] = useState("");
+  const [status, setStatus] = useState("");
+  const [source, setSource] = useState("");
+  const accounts = [...new Set(rows.map(r => String(r.accountName || "").trim()).filter(Boolean))].sort();
+  const statuses = [...new Set(rows.map(r => String(r.reconStatus || "").trim()).filter(Boolean))].sort();
+  const visible = rows.filter(r =>
+    (!account || String(r.accountName || "").trim() === account) &&
+    (!status || String(r.reconStatus || "").trim() === status) &&
+    (!source || (source === "Opening" ? String(r.reference || "").toUpperCase() === "OPENING" : String(r.reference || "").toUpperCase() !== "OPENING"))
+  );
+  const money = n => "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  const sum = key => visible.reduce((n, r) => n + (Number(String(r[key] ?? 0).replace(/[₹,\\s]/g, "")) || 0), 0);
+  const clear = () => { setAccount(""); setStatus(""); setSource(""); setQuery(""); };
+  return <div style={S.panel}>
+    <div style={S.panelHeader}>
+      <h3 style={S.h3}>Bank & Cash Transactions</h3>
+      <input placeholder="Search…" value={query} onChange={e => setQuery(e.target.value)} style={S.input} />
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(170px, 1fr))",gap:12,marginBottom:14,alignItems:"end"}}>
+      <Field label="Cash / Bank Account"><select aria-label="Cash or bank account" value={account} onChange={e => setAccount(e.target.value)} style={S.input}><option value="">All Accounts</option>{accounts.map(a => <option key={a} value={a}>{a}</option>)}</select></Field>
+      <Field label="Status"><select aria-label="Reconciliation status" value={status} onChange={e => setStatus(e.target.value)} style={S.input}><option value="">All Statuses</option>{statuses.map(a => <option key={a} value={a}>{a}</option>)}</select></Field>
+      <Field label="Source"><select aria-label="Entry source" value={source} onChange={e => setSource(e.target.value)} style={S.input}><option value="">All Entries</option><option value="Opening">Opening Balances</option><option value="Journal">Journal / Other</option></select></Field>
+      <button type="button" style={S.secondaryBtn} onClick={clear}>Clear Bank Filters</button>
+    </div>
+    <div style={{display:"flex",gap:18,flexWrap:"wrap",marginBottom:14,fontSize:14}}>
+      <span><b>{visible.length}</b> entries</span>
+      <span>Total debit: <b>{money(sum("debit"))}</b></span>
+      <span>Total credit: <b>{money(sum("credit"))}</b></span>
+      <span>Net debit − credit: <b>{money(sum("debit")-sum("credit"))}</b></span>
+    </div>
+    <div style={S.muted}>Use the From and As of / To fields above for date filtering. The net figure is for displayed entries only, not a reconciled closing balance.</div>
+    <DataTable rows={visible} columns={[["date","Date"],["accountName","Account"],["description","Description"],["debit","Debit"],["credit","Credit"],["balance","Balance"],["reference","Reference"],["reconStatus","Status"]]} />
+  </div>;
 }
 
 function Reconciliation({ rows }) {
