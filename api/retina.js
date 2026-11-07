@@ -233,8 +233,7 @@ async function saveOpening(payload, api) {
 }
 function applicableOpening(rows, filters={}) {
   const asOf=filters.to||new Date().toISOString().slice(0,10);
-  const from=filters.from||'';
-  return rows.filter(r=>r.date<=asOf && (!filters.division||r.division===filters.division||r.division==='Shared') && (!from||r.date<=asOf));
+  return rows.filter(r=>r.date<=asOf && (!filters.division||r.division===filters.division||r.division==='Shared'));
 }
 function openingReport(rows,filters={},title='Opening Balances') {
   const entries=applicableOpening(rows,filters);
@@ -243,19 +242,72 @@ function openingReport(rows,filters={},title='Opening Balances') {
 
 const sum = (arr, key) => arr.reduce((n, x) => n + Number(x[key] || 0), 0);
 
+// Provisional cash/bank movements from the journal. Bank statement rows are
+// shown separately and never added again to these balances (avoid double counting).
+function journalCashMovements(transactions, bankAccounts, filters = {}) {
+  const byId = new Map(bankAccounts.map(a => [String(a.id), a]));
+  const from = filters.from || '';
+  const to = filters.to || new Date().toISOString().slice(0,10);
+  return transactions.flatMap(t => {
+    const date = String(t.date || '').slice(0,10);
+    if (!date || date > to || (from && date < from)) return [];
+    if (filters.division && t.division !== filters.division && t.division !== 'Shared') return [];
+    if (filters.projectId && String(t.projectId || '') !== String(filters.projectId)) return [];
+    const bank = byId.get(String(t.bankCashAccountId || ''));
+    const mode = String(t.paymentMode || '').toLowerCase();
+    const accountName = bank?.name || bank?.accountName || (/\bcash\b/.test(mode) ? 'Cash in Hand' : '');
+    if (!accountName) return []; // Never guess which bank received a transfer.
+    const amount = Number(t.amount || 0) || Math.max(Number(t.debit || 0), Number(t.credit || 0));
+    if (!(amount > 0)) return [];
+    const isOut = ['expense','payment','purchase'].includes(String(t.voucherType || '').toLowerCase()) || (Number(t.debit || 0) > 0 && Number(t.credit || 0) === 0);
+    return [{id:'journal-'+t.id,date,division:t.division,projectId:t.projectId,accountName,
+      description:t.narration || t.accountName || t.voucherType,
+      debit:isOut?0:amount,credit:isOut?amount:0,
+      balance:null,reference:t.voucherNo || '',reconStatus:'Journal (unreconciled)',source:'journal'}];
+  });
+}
+function openingBankRows(opening, filters = {}) {
+  return applicableOpening(opening, {...filters, from:''}).filter(x =>
+    x.accountType === 'Asset' && /cash|kotak|idfc|bank|deposit|\bfd\b/i.test(x.accountName)
+  ).map(x=>({id:'opening-'+x.id,date:x.date,division:x.division,projectId:'',
+    accountName:x.accountName,description:'Opening balance',debit:Number(x.debit||0),credit:Number(x.credit||0),
+    balance:null,reference:'OPENING',reconStatus:'Opening',source:'opening'}));
+}
+async function cashBankBook(api, filters={}) {
+  const [transactions,bankAccounts,opening,statements] = await Promise.all([
+    read('transactions',api),read('bankAccounts',api),listOpening(api),read('bankTransactions',api)]);
+  const journal=journalCashMovements(transactions,bankAccounts,filters);
+  const openings=openingBankRows(opening,filters);
+  const from=filters.from||'', to=filters.to||new Date().toISOString().slice(0,10);
+  const statementRows=statements.filter(x=>String(x.date||'')<=to && (!from||String(x.date||'')>=from))
+    .map(x=>({...x,id:'statement-'+x.id,source:'statement',reconStatus:x.reconStatus||'Statement (not posted)'}));
+  // Running balance uses journal and opening only; statement imports are evidence,
+  // not additional journal postings. A full reconciled ledger is still required.
+  const ledger=[...openings,...journal].sort((a,b)=>a.date.localeCompare(b.date)||String(a.id).localeCompare(String(b.id)));
+  const totals=new Map();
+  for (const r of ledger) {
+    const key=String(r.accountName).trim().toLowerCase();
+    const balance=(totals.get(key)||0)+Number(r.debit||0)-Number(r.credit||0);
+    totals.set(key,balance);r.balance=balance;
+  }
+  return [...ledger.filter(x=>!from||x.date>=from),...statementRows].sort((a,b)=>b.date.localeCompare(a.date));
+}
+
 async function dashboard(api, filters = {}) {
-  const [sales, purchases, transactions, banks, recon, inventory, opening] = await Promise.all(
-    ['salesInvoices','purchaseBills','transactions','bankTransactions','reconciliation','inventoryMovements'].map(n => read(n, api)).concat([listOpening(api)])
+  const [sales, purchases, transactions, banks, recon, inventory, opening, bankAccounts] = await Promise.all(
+    ['salesInvoices','purchaseBills','transactions','bankTransactions','reconciliation','inventoryMovements'].map(n => read(n, api)).concat([listOpening(api),read('bankAccounts',api)])
   );
   const openingRows = applicableOpening(opening, filters);
   const openingAmount = pattern => openingRows.filter(x=>pattern.test(x.accountName.toLowerCase())).reduce((n,x)=>n+x.debit-x.credit,0);
+  const cashMovements = journalCashMovements(transactions,bankAccounts,{...filters,from:''});
+  const movementAmount = pattern => cashMovements.filter(x=>pattern.test(x.accountName.toLowerCase())).reduce((n,x)=>n+x.debit-x.credit,0);
   const monthSales = sum(sales, 'total');
   const monthPurchases = sum(purchases, 'total');
   const monthExpenses = sum(transactions.filter(t => ['Expense','Payment'].includes(t.voucherType)), 'debit');
   const grossProfit = monthSales - monthPurchases;
   return {
-    cashBalance: openingAmount(/cash in hand|cash account/), kotakBalance: openingAmount(/kotak/), idfcBalance: openingAmount(/idfc/), fdBalance: openingAmount(/fixed deposit|\bfd\b|deposit/),
-    openingBalanceOnly: true, openingAsOf: filters.to || new Date().toISOString().slice(0,10),
+    cashBalance: openingAmount(/cash in hand|cash account/)+movementAmount(/cash in hand|cash account/), kotakBalance: openingAmount(/kotak/)+movementAmount(/kotak/), idfcBalance: openingAmount(/idfc/)+movementAmount(/idfc/), fdBalance: openingAmount(/fixed deposit|\bfd\b|deposit/)+movementAmount(/fixed deposit|\bfd\b|deposit/),
+    openingBalanceOnly: false, openingAsOf: filters.to || new Date().toISOString().slice(0,10),
     receivables: sum(sales, 'outstanding'), payables: sum(purchases, 'outstanding'),
     inventoryValue: 0, netProfit: grossProfit - monthExpenses,
     monthSales, monthPurchases, monthExpenses, grossProfit,
@@ -590,7 +642,7 @@ export default async function handler(req, res) {
     } else if (name === 'apiDashboard') {
       result = await dashboard(api, args[0] || {});
     } else if (name === 'apiList') {
-      result = await read(args[0], api);
+      result = args[0] === 'bankTransactions' ? await cashBankBook(api,args[1]||{}) : await read(args[0], api);
     } else if (name === 'apiSaveMaster') {
       result = await saveMaster(args[0], args[1], api);
     } else if (name === 'apiSaveAccount') {

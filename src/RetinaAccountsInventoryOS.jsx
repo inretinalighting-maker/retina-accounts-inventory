@@ -737,7 +737,7 @@ function OpeningBalances({accounts,rows,onSaved}) {
     {error&&<div style={S.error}>{error}</div>}
     <h3 style={{marginTop:24}}>Saved Opening Balances</h3>
     <GenericReportTable rows={rows.map(r=>({date:r.date,division:r.division,account:r.accountName,type:r.accountType,debit:r.debit,credit:r.credit}))}/>
-    <p style={{fontSize:12}}>Opening balances are not profit or loss. Cash and bank dashboard cards show opening amounts only until a complete double-entry running balance is implemented.</p>
+    <p style={{fontSize:12}}>Opening balances are not profit or loss. Cash and bank cards include opening amounts and identifiable journal movements; balances remain provisional until reconciliation and double-entry accounting are complete.</p>
   </section>;
 }
 
@@ -755,7 +755,7 @@ function Dashboard({ data, onReport }) {
   ];
   return (
     <>
-      {d.openingBalanceOnly && <p style={{fontSize:12,color:"#855e00"}}>Cash and bank figures show opening balances only as of {d.openingAsOf}; subsequent transactions are not yet reconciled into running balances.</p>}
+      <p style={{fontSize:12,color:"#855e00"}}>Cash and bank balances are provisional: opening balances plus identifiable journal movements, not yet fully reconciled.</p>
       <section style={S.cardGrid}>
         {cards.map(([label, value]) => (
           <div key={label} style={S.card}>
