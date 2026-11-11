@@ -1,6 +1,7 @@
 import BankReconciliation from './BankReconciliation.jsx';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import HistoricalImport from "./HistoricalImport.jsx";
+import { supabase } from "./supabaseClient.js";
 
 /**
  * Retina Accounts + Inventory OS — STANDALONE DEMO
@@ -234,8 +235,16 @@ function mockRun(name, ...args) {
 const run = async (name, ...args) => {
   // Local demo mode is available without Google credentials; live mode uses Vercel API.
   if (import.meta.env.VITE_DEMO_MODE === "true") return mockRun(name, ...args);
+  const headers = { "Content-Type": "application/json" };
+  if (import.meta.env.VITE_REQUIRE_AUTH === "true") {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.access_token) {
+      throw new Error("Please sign in to continue.");
+    }
+    headers.Authorization = `Bearer ${data.session.access_token}`;
+  }
   const response = await fetch("/api/retina", {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers,
     body: JSON.stringify({ name, args }),
   });
   const result = await response.json();
@@ -265,6 +274,72 @@ const initialTxn = {
 };
 
 export default function RetinaAccountsInventoryOS() {
+  const authEnabled = import.meta.env.VITE_REQUIRE_AUTH === "true" && import.meta.env.VITE_DEMO_MODE !== "true";
+  return authEnabled ? <RetinaAuthGate /> : <RetinaApp />;
+}
+
+function RetinaAuthGate() {
+  const [session, setSession] = useState(null);
+  const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [authError, setAuthError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      if (error) setAuthError(error.message);
+      setSession(data?.session ?? null);
+      setChecking(false);
+    }).catch(error => {
+      if (active) { setAuthError(error.message); setChecking(false); }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (active) setSession(nextSession);
+    });
+    return () => { active = false; listener.subscription.unsubscribe(); };
+  }, []);
+
+  async function signIn(event) {
+    event.preventDefault();
+    setAuthError("");
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      setPassword("");
+    } catch (error) {
+      setAuthError(error.message || "Sign-in failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (checking) return <main style={{ padding: 32 }}>Checking your session…</main>;
+  if (!session) return (
+    <main style={{ maxWidth: 420, margin: "12vh auto", padding: 24, fontFamily: "sans-serif" }}>
+      <h1>Retina OS — Preview Sign In</h1>
+      <p>Authorized administrator access only.</p>
+      <form onSubmit={signIn} style={{ display: "grid", gap: 12 }}>
+        <label>Email<input type="email" required autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} style={{ display: "block", width: "100%", padding: 10, boxSizing: "border-box" }} /></label>
+        <label>Password<input type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} style={{ display: "block", width: "100%", padding: 10, boxSizing: "border-box" }} /></label>
+        <button type="submit" disabled={busy} style={{ padding: 12 }}>{busy ? "Signing in…" : "Sign in"}</button>
+      </form>
+      {authError && <p role="alert" style={{ color: "#b91c1c" }}>{authError}</p>}
+    </main>
+  );
+  return <>
+    <div style={{ padding: "8px 16px", background: "#f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "sans-serif", fontSize: 13 }}>
+      <span>Authenticated preview — Google Sheets backend</span>
+      <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
+    </div>
+    <RetinaApp />
+  </>;
+}
+
+function RetinaApp() {
   const [view, setView] = useState("dashboard");
   const [mastersExpanded, setMastersExpanded] = useState(false);
   const [showHistoricalImport, setShowHistoricalImport] = useState(false);
