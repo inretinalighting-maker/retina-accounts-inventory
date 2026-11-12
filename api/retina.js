@@ -33,6 +33,7 @@ function client() {
 }
 
 async function read(entity, api) {
+  if (api?.kind === 'supabase') return sbRead(entity);
   if (!ENTITIES.includes(entity)) throw new Error('Unknown entity');
   const r = await api.sheets.spreadsheets.values.get({ spreadsheetId: api.id, range: sheetRange(entity) });
   const [header, ...rows] = r.data.values || [];
@@ -200,6 +201,7 @@ async function ensureOpeningSheet(api) {
   else if (OPENING_HEADERS.some((x,i) => existing[i] !== x)) throw new Error('openingBalances header mismatch; no changes made');
 }
 async function listOpening(api) {
+  if (api?.kind === 'supabase') return sbRead('openingBalances');
   await ensureOpeningSheet(api);
   const r = await api.sheets.spreadsheets.values.get({spreadsheetId:api.id,range:"'openingBalances'!A2:H"});
   return (r.data.values || []).filter(x=>x[0]).map(x=>Object.fromEntries(OPENING_HEADERS.map((k,i)=>[k, k==='debit'||k==='credit'?Number(x[i]||0):String(x[i]||'')])));
@@ -619,6 +621,238 @@ async function uploadBase64(payload, req) {
   return { url: created.data.webViewLink || `https://drive.google.com/file/d/${id}/view` };
 }
 
+
+// Supabase data adapter. Activated ONLY on authenticated Vercel Preview.
+// Production and local development retain the existing Google Sheets code path.
+const SB_TABLES = new Set([...ENTITIES, 'openingBalances']);
+const SB_DATE_FIELDS = new Set(['date','bankDate','valueDate']);
+function isSupabasePreview() {
+  return process.env.RETINA_DATA_BACKEND === 'supabase' &&
+    process.env.VERCEL_ENV === 'preview' &&
+    process.env.VITE_REQUIRE_AUTH === 'true';
+}
+function sbConfig() {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url) || !key)
+    throw new Error('Preview Supabase URL or service-role key is not configured');
+  return { url: url.replace(/\/$/, ''), key };
+}
+async function sbRequest(table, { method='GET', query='', body, headers={} }={}) {
+  if (!SB_TABLES.has(table)) throw new Error('Unsupported Supabase table');
+  const {url,key}=sbConfig();
+  const target = `${url}/rest/v1/${encodeURIComponent(table)}${query?'?'+query:''}`;
+  const response = await fetch(target, {method, headers:{apikey:key,Authorization:`Bearer ${key}`,
+    Accept:'application/json', ...(body!==undefined?{'Content-Type':'application/json',Prefer:'return=representation'}:{}), ...headers},
+    ...(body!==undefined?{body:JSON.stringify(body)}:{})});
+  const raw=await response.text();
+  let data;try {data=raw?JSON.parse(raw):null;} catch {data=null;}
+  if (!response.ok) {
+    console.error('Supabase operation failed',table,method,response.status, data?.code);
+    throw new Error(`Supabase ${table} operation failed (${response.status}): ${data?.message||'Request failed'}`);
+  }
+  return data;
+}
+function sbEncodeFilter(field,value) {return `${encodeURIComponent(field)}=eq.${encodeURIComponent(String(value))}`;}
+async function sbRead(entity) {
+  if (!SB_TABLES.has(entity)) throw new Error('Unknown entity');
+  const all=[];
+  for(let offset=0;offset<100000;offset+=1000) {
+    const part=await sbRequest(entity,{query:`select=*&limit=1000&offset=${offset}`});
+    if (!Array.isArray(part)) throw new Error('Unexpected Supabase response');
+    all.push(...part);
+    if(part.length<1000) break;
+  }
+  return all.map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[k,numeric.has(k)?Number(v??0):(v??'')])));
+}
+async function sbFind(entity,id) {
+  const result=await sbRequest(entity,{query:`select=*&${sbEncodeFilter('id',id)}&limit=2`});
+  if(result.length!==1) throw new Error(result.length?'Duplicate record IDs':'Record not found');
+  return result[0];
+}
+async function sbInsert(entity,record) {
+  return sbRequest(entity,{method:'POST',body:record});
+}
+async function sbUpdate(entity,id,record) {
+  await sbFind(entity,id);
+  return sbRequest(entity,{method:'PATCH',query:sbEncodeFilter('id',id),body:record});
+}
+async function sbDelete(entity,id) {
+  await sbFind(entity,id);
+  return sbRequest(entity,{method:'DELETE',query:sbEncodeFilter('id',id)});
+}
+async function sbOpening(payload) {
+  const date=openingDate(payload?.date);
+  const division=String(payload?.division||'').trim();
+  if(!['Design','Product','Shared'].includes(division)) throw new Error('Choose Design, Product or Shared');
+  const input=payload?.rows;
+  if(!Array.isArray(input)||!input.length||input.length>100) throw new Error('Enter 1–100 opening balance lines');
+  const [accounts,existing]=await Promise.all([sbRead('accounts'),sbRead('openingBalances')]);
+  if(existing.some(x=>x.date===date&&x.division===division)) throw new Error('Opening balances already exist for this date and division');
+  const map=new Map(accounts.map(a=>[String(a.id),a]));const seen=new Set();let debit=0,credit=0;
+  const rows=input.map(x=>{
+    const a=map.get(String(x.accountId||''));if(!a) throw new Error('Choose an approved account');
+    if(seen.has(a.id)) throw new Error('Duplicate opening account');seen.add(a.id);
+    if(!OPENING_TYPES.includes(x.accountType)) throw new Error('Invalid opening account type');
+    const d=Number(x.debit||0),c=Number(x.credit||0);
+    if(![d,c].every(Number.isFinite)||d<0||c<0||(d>0&&c>0)||(d===0&&c===0)) throw new Error('Invalid opening debit/credit');
+    debit+=d;credit+=c;
+    return {id:`OB-${crypto.randomUUID()}`,date,division,accountId:a.id,accountName:a.name,accountType:x.accountType,debit:d,credit:c};
+  });
+  if(Math.abs(debit-credit)>0.009) throw new Error('Opening balances do not balance');
+  await sbInsert('openingBalances',rows);
+  return {ok:true,date,division,lines:rows.length,totalDebit:debit,totalCredit:credit};
+}
+async function sbSaveTransaction(payload,update=false) {
+  if(!payload?.date||!payload?.accountId||!(Number(payload.amount)>0)) throw new Error('Date, account and positive amount are required');
+  const [accounts,projects,parties]=await Promise.all(['accounts','projects','parties'].map(sbRead));
+  const a=accounts.find(x=>String(x.id)===String(payload.accountId));
+  if(!a) throw new Error('Select an approved account');
+  const old=update?await sbFind('transactions',payload.id):null;
+  const amount=Number(payload.amount),debit=['Expense','Payment','Purchase'].includes(payload.voucherType)?amount:0;
+  const id=old?.id||crypto.randomUUID();
+  const record={...payload,id,voucherNo:old?.voucherNo||`V-${Date.now()}`,
+    projectName:projects.find(x=>String(x.id)===String(payload.projectId))?.name||'',
+    partyName:parties.find(x=>String(x.id)===String(payload.partyId))?.name||'',
+    accountName:a.name,amount,debit,credit:debit?0:amount,
+    attachmentUrl:validateAttachmentUrl(payload.attachmentUrl)};
+  // Explicitly write only supported transaction columns; prevent accidental schema drift.
+  const allowed=fields.transactions;
+  const clean=Object.fromEntries(allowed.filter(k=>Object.hasOwn(record,k)).map(k=>[k,record[k]??null]));
+  if(clean.gstRate==='') clean.gstRate=null;
+  if(update) await sbUpdate('transactions',id,clean); else await sbInsert('transactions',clean);
+  return {ok:true,id};
+}
+async function sbSaveAccount(payload) {
+  const name=String(payload?.name||'').trim(),group=String(payload?.group||'').trim();
+  if(!name||!group) throw new Error('Account name and group are required');
+  const existing=await sbRead('accounts');
+  if(existing.some(x=>String(x.name).toLowerCase()===name.toLowerCase()&&String(x.id)!==String(payload.id||''))) throw new Error('Account name already exists');
+  const id=payload.id?String(payload.id):`ACC-${crypto.randomUUID()}`;
+  if(payload.id) await sbUpdate('accounts',id,{name,group,account_group:group});
+  else await sbInsert('accounts',{id,name,group,account_group:group});
+  return {ok:true,id};
+}
+async function sbSaveMaster(entity,payload) {
+  if(!['parties','projects'].includes(entity)) throw new Error('Unsupported master');
+  const name=String(payload?.name||'').trim();if(!name) throw new Error('Name is required');
+  const existing=await sbRead(entity);
+  if(existing.some(x=>String(x.name).toLowerCase()===name.toLowerCase()&&String(x.id)!==String(payload.id||''))) throw new Error('Duplicate master name');
+  const id=payload.id?String(payload.id):`${entity==='parties'?'PTY':'PRJ'}-${crypto.randomUUID()}`;
+  const cols=fields[entity];const merged={...(existing.find(x=>x.id===id)||{}),...payload,id,name};
+  const clean=Object.fromEntries(cols.filter(k=>Object.hasOwn(merged,k)).map(k=>[k,merged[k]]));
+  if(entity==='projects') {
+    clean.budget=Number(clean.budget||0);clean.spent=Number(clean.spent||0);
+    if(!Number.isFinite(clean.budget)||clean.budget<0||!Number.isFinite(clean.spent)) throw new Error('Invalid project amounts');
+  }
+  if(payload.id) await sbUpdate(entity,id,clean);else await sbInsert(entity,clean);
+  return {ok:true,id};
+}
+async function sbDeleteRecord(entity,id) {
+  if(!['accounts','transactions','parties','projects'].includes(entity)) throw new Error('Unsupported delete');
+  const record=await sbFind(entity,id);
+  if(entity==='accounts'&&(await sbRead('transactions')).some(x=>String(x.accountId)===String(id))) throw new Error('Account is used by transactions');
+  if(['parties','projects'].includes(entity)) {
+    const rows=(await Promise.all(['transactions','salesInvoices','purchaseBills','inventoryMovements'].map(sbRead))).flat();
+    const key=entity==='parties'?'partyId':'projectId',nk=entity==='parties'?'partyName':'projectName';
+    if(rows.some(x=>String(x[key]||'')===String(id)||String(x[nk]||'').toLowerCase()===String(record.name||'').toLowerCase())) throw new Error('Master is referenced by existing records');
+  }
+  await sbDelete(entity,id);return {ok:true};
+}
+async function sbImportHistorical(payload) {
+  const input=payload?.rows;
+  if(!Array.isArray(input)||!input.length||input.length>300) throw new Error('Import 1–300 rows');
+  const [existing,accounts,projects,parties,banks]=await Promise.all(['transactions','accounts','projects','parties','bankAccounts'].map(sbRead));
+  const known=new Set(existing.map(x=>String(x.voucherNo||'').trim().toLowerCase()).filter(Boolean));
+  const seen=new Set(),records=[],errors=[];
+  for(let i=0;i<input.length;i++) {
+    const r=input[i],date=String(r.date||'').trim(),voucherNo=String(r.voucherNo||'').trim();
+    const account=accounts.find(a=>String(a.id)===String(r.accountId))||accounts.find(a=>String(a.name).toLowerCase()===String(r.accountName||'').toLowerCase());
+    const amount=Number(r.amount||0),debit=Number(r.debit||0),credit=Number(r.credit||0);
+    if(!['Design','Product'].includes(r.division)||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date)||!voucherNo||!account||!(amount>0)||!r.voucherType||(!debit&&!credit)||(debit>0&&credit>0)) {errors.push(`Row ${i+1}: invalid transaction fields`);continue;}
+    const key=voucherNo.toLowerCase();if(known.has(key)||seen.has(key)){errors.push(`Row ${i+1}: duplicate voucher`);continue;}seen.add(key);
+    const project=projects.find(x=>String(x.id)===String(r.projectId)||x.name===r.projectName);
+    const party=parties.find(x=>String(x.id)===String(r.partyId)||x.name===r.partyName);
+    const bank=banks.find(x=>String(x.id)===String(r.bankCashAccountId)||x.name===r.bankCashAccountName);
+    records.push({id:crypto.randomUUID(),date,voucherType:r.voucherType,voucherNo,division:r.division,
+      projectId:project?.id||'',projectName:project?.name||'',partyId:party?.id||'',partyName:party?.name||'',
+      accountId:account.id,accountName:account.name,amount,debit,credit,paymentMode:r.paymentMode||'',
+      bankCashAccountId:bank?.id||'',narration:r.narration||'',taxStatus:r.taxStatus||'',
+      gstRate:r.gstRate||null,invoiceNo:r.invoiceNo||'',attachmentUrl:validateAttachmentUrl(r.attachmentUrl)});
+  }
+  if(errors.length)return {ok:false,imported:0,errors:errors.slice(0,30)};
+  await sbInsert('transactions',records);return {ok:true,imported:records.length};
+}
+async function sbImportBank(payload) {
+  const bank=bankName(payload?.bank),input=payload?.rows;
+  if(!Array.isArray(input)||!input.length||input.length>500) throw new Error('Import 1–500 rows');
+  const existing=await sbRead('bankTransactions');const seen=new Set(existing.map(x=>x.importKey).filter(Boolean));
+  const batch=[];let skipped=0;
+  for(const raw of input) {
+    const date=validBankDate(raw.date),debit=money(raw.debit||0),credit=money(raw.credit||0);
+    if((debit>0)===(credit>0)) throw new Error('Each bank entry needs one debit or credit');
+    const record={id:`BANK-${crypto.randomUUID()}`,date,accountName:bank,sourceBank:bank,
+      description:safeBankText(raw.description),debit,credit,
+      balance:raw.balance===''||raw.balance==null?null:Number(raw.balance),reference:safeBankText(raw.reference),
+      valueDate:raw.valueDate?validBankDate(raw.valueDate):null,direction:debit>0?'Debit':'Credit',
+      reconStatus:'Unmatched',matchedTransactionId:'',matchedVoucherNo:'',matchedAt:null};
+    if(!record.description||record.balance!==null&&!Number.isFinite(record.balance)) throw new Error('Invalid bank row');
+    record.importKey=bankFingerprint(bank,record);
+    if(seen.has(record.importKey)){skipped++;continue;}seen.add(record.importKey);batch.push(record);
+  }
+  if(batch.length) await sbInsert('bankTransactions',batch);
+  return {ok:true,imported:batch.length,skipped};
+}
+async function sbReconcileBank(payload) {
+  const id=String(payload?.bankRowId||''),txid=String(payload?.transactionId||'');
+  if(!id) throw new Error('Bank row ID required');
+  const [rows,txns,banks]=await Promise.all(['bankTransactions','transactions','bankAccounts'].map(sbRead));
+  const row=rows.find(x=>String(x.id)===id);if(!row) throw new Error('Bank row not found');
+  const tx=txid?txns.find(x=>String(x.id)===txid):null;if(txid&&!tx) throw new Error('Transaction not found');
+  if(tx) {
+    if(rows.some(x=>x.id!==id&&x.matchedTransactionId===txid&&x.reconStatus==='Matched')) throw new Error('Transaction already matched');
+    if(Math.abs(Number(row.debit||row.credit||0)-Number(tx.amount||tx.debit||tx.credit||0))>0.009) throw new Error('Amounts differ');
+    if((Number(tx.debit||0)>0)!==(Number(row.debit||0)>0)) throw new Error('Debit/credit direction differs');
+    const bank=banks.find(x=>String(x.id)===String(tx.bankCashAccountId));
+    if(!bank||bankName(bank.name)!==bankName(row.accountName)) throw new Error('Bank account mismatch');
+  }
+  await sbUpdate('bankTransactions',id,{reconStatus:tx?'Matched':'Unmatched',matchedTransactionId:tx?.id||'',matchedVoucherNo:tx?.voucherNo||'',matchedAt:tx?new Date().toISOString():null});
+  return {ok:true,status:tx?'Matched':'Unmatched'};
+}
+async function supabaseDispatch(name,args) {
+  const api={kind:'supabase'};
+  if(name==='apiBootstrap')return {masters:Object.fromEntries(await Promise.all(MASTER_KEYS.map(async k=>[k,await sbRead(k)]))),orgName:'Retina'};
+  if(name==='apiList')return args[0]==='bankTransactions'?cashBankBook(api,args[1]||{}):sbRead(args[0]);
+  if(name==='apiDashboard')return dashboard(api,args[0]||{});
+  if(name==='apiListOpeningBalances')return sbRead('openingBalances');
+  if(name==='apiSaveOpeningBalances')return sbOpening(args[0]);
+  if(name==='apiSaveAccount')return sbSaveAccount(args[0]);
+  if(name==='apiSaveMaster')return sbSaveMaster(args[0],args[1]);
+  if(name==='apiSave'&&args[0]==='transactions')return sbSaveTransaction(args[1]);
+  if(name==='apiUpdateTransaction')return sbSaveTransaction(args[0],true);
+  if(name==='apiDeleteRecord')return sbDeleteRecord(args[0],args[1]);
+  if(name==='apiImportHistoricalTransactions')return sbImportHistorical(args[0]);
+  if(name==='apiImportBankRows')return sbImportBank(args[0]);
+  if(name==='apiReconcileBankRow')return sbReconcileBank(args[0]);
+  if(name==='apiReport') {
+    const [sales,purchases]=await Promise.all(['salesInvoices','purchaseBills'].map(sbRead));
+    if(args[0]==='Profit & Loss')return profitAndLoss(api,args[1]||{});
+    if(args[0]==='Receivables Aging')return sales.filter(x=>Number(x.outstanding)>0);
+    if(args[0]==='Payables Aging')return purchases.filter(x=>Number(x.outstanding)>0);
+    if(args[0]==='Inventory Valuation')return sbRead('inventoryMovements');
+    if(['Trial Balance','Balance Sheet','Cash Flow','Bank Book','Cash Book'].includes(args[0]))return openingReport(await sbRead('openingBalances'),args[1]||{},args[0]);
+    return {note:`${args[0]} report needs accounting logic before production use.`};
+  }
+  // Staging is a Google-only migration workspace. Never silently modify Google from Supabase Preview.
+  if(['apiStagingAccounts','apiSaveStagedAccount','apiDeleteStagedAccount'].includes(name)) {
+    const error=new Error('Account staging is disabled in Supabase Preview; existing accounts are already imported');error.status=409;throw error;
+  }
+  if(name==='apiUploadBase64') {
+    const error=new Error('Use the authenticated Supabase Storage uploader in Preview');error.status=409;throw error;
+  }
+  const error=new Error('Unsupported operation');error.status=400;throw error;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -628,6 +862,15 @@ export default async function handler(req, res) {
       await requireAdmin(req);
     }
     const { name, args = [] } = req.body || {};
+    if (process.env.RETINA_DATA_BACKEND === 'supabase' && !isSupabasePreview()) {
+      return res.status(503).json({error:'Supabase data backend is restricted to authenticated Preview deployments'});
+    }
+    if (isSupabasePreview()) {
+      const result=await supabaseDispatch(name,args);
+      res.setHeader('X-Retina-Data-Backend','supabase-preview');
+      return res.status(200).json(result);
+    }
+
     // Do not initialize Google Sheets credentials when only uploading a file.
     if (name === 'apiUploadBase64') {
       const result = await uploadBase64(args[0], req);
