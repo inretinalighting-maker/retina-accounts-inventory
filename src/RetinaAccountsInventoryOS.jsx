@@ -252,6 +252,34 @@ const run = async (name, ...args) => {
   return result;
 };
 
+// Supabase attachments use a private storage path; never persist a signed URL.
+const STORAGE_PREFIX = 'supabase://retina-attachments/';
+const isStorageAttachment = value => String(value || '').startsWith(STORAGE_PREFIX);
+
+async function attachmentLink(value, download = false) {
+  if (!isStorageAttachment(value)) return value;
+  if (!supabase || import.meta.env.VITE_REQUIRE_AUTH !== 'true') throw new Error('Supabase attachment access is available only in the authenticated Preview');
+  const path = value.slice(STORAGE_PREFIX.length);
+  if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(pdf|jpg|png|webp)$/.test(path)) throw new Error('Invalid attachment reference');
+  const { data, error } = await supabase.storage.from('retina-attachments').createSignedUrl(path, 60, download ? { download: true } : undefined);
+  if (error || !data?.signedUrl) throw new Error(error?.message || 'Could not open attachment');
+  return data.signedUrl;
+}
+
+async function openAttachment(value, download = false) {
+  try {
+    const link = await attachmentLink(value, download);
+    // Temporary signed URLs expire after 60 seconds; no public bucket needed.
+    const a = document.createElement('a');
+    a.href = link;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (error) { window.alert(error.message || 'Could not open attachment'); }
+}
+
 // ---------------------------------------------------------------------
 
 const DIVISIONS = ["Design", "Product"];
@@ -545,20 +573,27 @@ function RetinaApp() {
   }
   async function uploadAttachment(file) {
     if (!file) return;
-    setErr("");
+    setErr('');
     setUploadingAttachment(true);
     const task = (async () => {
       try {
-        if (!['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
+        const allowed = {'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+        if (!allowed[file.type] || !file.size || file.size > 4 * 1024 * 1024) {
           throw new Error('Choose a PDF, JPG, PNG or WEBP file of 4 MB or less');
         }
-        const base64 = await fileToBase64(file);
-        const result = await run("apiUploadBase64", {
-          fileName: file.name, mimeType: file.type, base64,
+        if (import.meta.env.VITE_REQUIRE_AUTH !== 'true' || !supabase) {
+          throw new Error('Supabase attachment uploads are enabled only in authenticated Preview');
+        }
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) throw new Error('Please sign in before uploading');
+        const path = `${user.id}/${crypto.randomUUID()}.${allowed[file.type]}`;
+        const { error } = await supabase.storage.from('retina-attachments').upload(path, file, {
+          contentType: file.type, upsert: false, cacheControl: '3600'
         });
-        if (!result?.url) throw new Error('Drive upload returned no attachment link');
-        setTxn(x => ({ ...x, attachmentUrl: result.url }));
-        return result.url;
+        if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+        const reference = `${STORAGE_PREFIX}${path}`;
+        setTxn(x => ({ ...x, attachmentUrl: reference }));
+        return reference;
       } catch (e) {
         setErr(e.message);
         return false;
@@ -619,7 +654,7 @@ function RetinaApp() {
           ))}
         </nav>
 
-        <button style={S.primaryBtn} onClick={() => { setTxn(initialTxn); setModal({ type: "transaction" }); }}>
+        <button style={S.primaryBtn} onClick={() => { attachmentUploadRef.current = null; setTxn(initialTxn); setModal({ type: "transaction" }); }}>
           + New Transaction
         </button>
       </aside>
@@ -666,7 +701,7 @@ function RetinaApp() {
         </div>}
         {view === "transactions" && <div style={{marginBottom:12}}><button style={S.secondaryBtn} onClick={()=>setShowHistoricalImport(v=>!v)}>{showHistoricalImport ? "Close historical import" : "Import Old Transactions (CSV)"}</button></div>}
         {view === "transactions" && showHistoricalImport && <HistoricalImport accounts={accounts} divisions={DIVISIONS} onImported={()=>{setShowHistoricalImport(false);loadView();}} />}
-        {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} onEdit={r => { setTxn({ ...initialTxn, ...r, amount: r.amount || Number(r.debit || r.credit || 0) }); setModal({ type: "transaction" }); }} onDelete={r => deleteRow("transactions", r)} />}
+        {!loading && view === "transactions" && <Transactions rows={filteredRows} query={query} setQuery={setQuery} onEdit={r => { attachmentUploadRef.current = null; setTxn({ ...initialTxn, ...r, amount: r.amount || Number(r.debit || r.credit || 0) }); setModal({ type: "transaction" }); }} onDelete={r => deleteRow("transactions", r)} />}
         {!loading && view === "sales" && <Sales rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "purchases" && <Purchases rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "inventory" && <Inventory rows={filteredRows} query={query} setQuery={setQuery} products={products} />}
@@ -752,16 +787,17 @@ function RetinaApp() {
             <Field label="GST Rate %"><input type="number" value={txn.gstRate} onChange={(e) => setTxn({ ...txn, gstRate: e.target.value })} style={S.input} /></Field>
             <Field label="Invoice / Ref No."><input value={txn.invoiceNo} onChange={(e) => setTxn({ ...txn, invoiceNo: e.target.value })} style={S.input} /></Field>
             <Field label="Narration" wide><textarea value={txn.narration} onChange={(e) => setTxn({ ...txn, narration: e.target.value })} style={{ ...S.input, minHeight: 90 }} /></Field>
-            <Field label="Google Drive attachment (one file per transaction)" wide>
-              <input type="url" placeholder="Paste existing Google Drive file URL (https://drive.google.com/...)" value={txn.attachmentUrl || ""}
+            <Field label="Attachment (private Supabase Storage or existing Google Drive link)" wide>
+              <input type="text" placeholder="Paste an existing Google Drive link or upload a file below" value={txn.attachmentUrl || ""}
                 onChange={(e) => setTxn(x => ({...x, attachmentUrl: e.target.value}))} style={{...S.input, width:"100%"}} />
               <div style={{display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginTop:8}}>
                 <label>Or upload a new file: <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" disabled={uploadingAttachment} onChange={(e) => uploadAttachment(e.target.files?.[0])} /></label>
-                {txn.attachmentUrl && <a href={txn.attachmentUrl} target="_blank" rel="noopener noreferrer">View attachment</a>}
+                {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => openAttachment(txn.attachmentUrl)}>View attachment</button>}
+                 {isStorageAttachment(txn.attachmentUrl) && <button type="button" style={S.secondaryBtn} onClick={() => openAttachment(txn.attachmentUrl, true)}>Download</button>}
                 {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => setTxn(x => ({...x, attachmentUrl:""}))}>Remove link</button>}
               </div>
-              {uploadingAttachment && <div style={S.muted}>Uploading attachment to Google Drive… please wait.</div>}
-              <div style={S.muted}>Files go into InRetina Images. Saving the transaction saves this link to Google Sheets. Removing the link does not delete the Drive file.</div>
+              {uploadingAttachment && <div style={S.muted}>Uploading attachment to private Supabase Storage… please wait.</div>}
+              <div style={S.muted}>New files go to private Supabase Storage (Preview only). The transaction stores a private file reference in Google Sheets until database migration. Existing Google Drive links continue to work. Removing a reference does not delete the file.</div>
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>
@@ -966,7 +1002,7 @@ function DataTable({ rows = [], columns = [], onEdit, onDelete }) {
       <table style={S.table}>
         <thead><tr>{columns.map(([k,l]) => <th style={S.th} key={k}>{l}</th>)}{(onEdit || onDelete) && <th style={S.th}>Actions</th>}</tr></thead>
         <tbody>
-          {rows.map((r, i) => <tr key={r.id || i}>{columns.map(([k]) => <td style={S.td} key={k}>{k === "attachmentUrl" ? (r[k] ? <a href={r[k]} target="_blank" rel="noopener noreferrer">View attachment</a> : "—") : formatCell(k, r[k])}</td>)}{(onEdit || onDelete) && <td style={S.td}>{onEdit && <button style={S.secondaryBtn} onClick={() => onEdit(r)}>Edit</button>} {onDelete && <button style={S.secondaryBtn} onClick={() => onDelete(r)}>Delete</button>}</td>}</tr>)}
+          {rows.map((r, i) => <tr key={r.id || i}>{columns.map(([k]) => <td style={S.td} key={k}>{k === "attachmentUrl" ? (r[k] ? <button type="button" style={S.secondaryBtn} onClick={() => openAttachment(r[k])}>View attachment</button> : "—") : formatCell(k, r[k])}</td>)}{(onEdit || onDelete) && <td style={S.td}>{onEdit && <button style={S.secondaryBtn} onClick={() => onEdit(r)}>Edit</button>} {onDelete && <button style={S.secondaryBtn} onClick={() => onDelete(r)}>Delete</button>}</td>}</tr>)}
           {!rows.length && <tr><td style={S.td} colSpan={Math.max(1, columns.length)}>No records</td></tr>}
         </tbody>
       </table>
