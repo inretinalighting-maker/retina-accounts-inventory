@@ -371,6 +371,14 @@ function validateAttachmentUrl(value) {
   const url = String(value || '').trim();
   if (!url) return '';
   if (url.length > 2048) throw new Error('Attachment link is too long');
+  // Private Supabase Storage reference, never a public or signed URL.
+  if (url.startsWith('supabase://')) {
+    if (!/^supabase:\/\/retina-attachments\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(pdf|jpg|png|webp)$/.test(url)) {
+      throw new Error('Invalid Supabase attachment reference');
+    }
+    if (process.env.VITE_REQUIRE_AUTH !== 'true') throw new Error('Supabase attachments are Preview-only until approved cutover');
+    return url;
+  }
   let parsed;
   try { parsed = new URL(url); } catch { throw new Error('Invalid attachment URL'); }
   if (parsed.protocol !== 'https:' || !['drive.google.com', 'docs.google.com'].includes(parsed.hostname)) {
