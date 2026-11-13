@@ -435,6 +435,7 @@ function RetinaApp() {
         sales: "salesInvoices",
         purchases: "purchaseBills",
         inventory: "inventoryMovements",
+        products: "products",
         parties: "parties",
         projects: "projects",
         bank: "bankTransactions",
@@ -644,7 +645,7 @@ function RetinaApp() {
             ["opening", "Opening Balances"],
             ["parties", "Parties — Customers & Suppliers"],
             ["projects", "Projects — Design & Product"],
-            ["inventory", "Products & Inventory"],
+            ["products", "Products & Inventory"],
             ["bank", "Bank & Cash Accounts"],
           ].map(([id, label]) => (
             <button key={`master-${id}`} onClick={() => setView(id)}
@@ -662,7 +663,7 @@ function RetinaApp() {
       <main style={S.main}>
         {view !== "report-detail" && <header style={S.header}>
           <div>
-            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects", opening: "Opening Balances" }[view]) || "Retina OS"}</h1>
+            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects", products: "Products & Inventory", opening: "Opening Balances" }[view]) || "Retina OS"}</h1>
             <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : (boot ? `Live mode · ${boot.dataBackend === "supabase" ? "Supabase backend" : boot.dataBackend === "google-sheets" ? "Google Sheets backend" : "Backend not verified"}` : "Connecting to data backend…")}</div>
           </div>
           <div style={S.headerActions}>
@@ -705,6 +706,7 @@ function RetinaApp() {
         {!loading && view === "sales" && <Sales rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "purchases" && <Purchases rows={filteredRows} query={query} setQuery={setQuery} />}
         {!loading && view === "inventory" && <Inventory rows={filteredRows} query={query} setQuery={setQuery} products={products} />}
+        {!loading && view === "products" && <TablePage title="Product Master" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id", "SKU / ID"], ["name", "Product Name"]]} />}
         {!loading && view === "parties" && <><div style={{marginBottom:12}}><button style={S.primaryBtn} onClick={() => openMaster("parties")}>+ Add Party</button></div><TablePage title="Parties" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Name"],["type","Type"],["city","City"],["gstin","GSTIN"]]} onEdit={r => openMaster("parties",r)} onDelete={r => deleteRow("parties",r)} /></>}
         {!loading && view === "projects" && <><div style={{marginBottom:12}}><button style={S.primaryBtn} onClick={() => openMaster("projects")}>+ Add Project</button></div><TablePage title="Projects" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Name"],["division","Division"],["status","Status"],["budget","Budget"],["spent","Spent"]]} onEdit={r => openMaster("projects",r)} onDelete={r => deleteRow("projects",r)} /></>}
         {!loading && view === "bank" && <Bank rows={filteredRows} query={query} setQuery={setQuery} />}
