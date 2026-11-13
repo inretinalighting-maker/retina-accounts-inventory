@@ -360,7 +360,7 @@ function RetinaAuthGate() {
   );
   return <>
     <div style={{ padding: "8px 16px", background: "#f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "sans-serif", fontSize: 13 }}>
-      <span>Authenticated preview — Google Sheets backend</span>
+      <span>Authenticated preview — backend verified after loading</span>
       <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
     </div>
     <RetinaApp />
@@ -663,7 +663,7 @@ function RetinaApp() {
         {view !== "report-detail" && <header style={S.header}>
           <div>
             <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects", opening: "Opening Balances" }[view]) || "Retina OS"}</h1>
-            <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : "Live mode · Google Sheets backend"}</div>
+            <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : (boot ? `Live mode · ${boot.dataBackend === "supabase" ? "Supabase backend" : boot.dataBackend === "google-sheets" ? "Google Sheets backend" : "Backend not verified"}` : "Connecting to data backend…")}</div>
           </div>
           <div style={S.headerActions}>
             <select aria-label="Division filter" value={filters.division} onChange={(e) => setFilters({ ...filters, division: e.target.value })} style={S.input}>
@@ -714,6 +714,7 @@ function RetinaApp() {
           <p style={{ marginBottom: 12 }}>Live approved accounts (existing IDs retained). New transactions use only these accounts.</p>
           <div style={{ marginBottom: 12 }}><button style={S.primaryBtn} onClick={() => { setAccountForm({ id: "", name: "", group: "" }); setModal({ type: "account" }); }}>+ Add Account</button></div>
           <TablePage title="Live Chart of Accounts" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Account Name"],["group","Group"]]} onEdit={r => { setAccountForm({ id: r.id, name: r.name, group: r.group }); setModal({ type: "account" }); }} onDelete={r => deleteRow("accounts", r)} />
+          {boot?.dataBackend !== 'supabase' && <>
           <h3 style={{ marginTop: 28 }}>Staged Chart of Accounts — Manage Accounts</h3>
           <p>Add, edit or delete staged accounts here. Saving immediately updates the <strong>accounts_staging</strong> Google Sheet. Staged accounts are not automatically available for transaction posting.</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -727,7 +728,8 @@ function RetinaApp() {
               <td style={{ padding: 8, whiteSpace: 'nowrap', borderBottom: '1px solid #ddd' }}><button style={S.secondaryBtn} onClick={() => { setStageForm({ ...a }); setModal({ type: 'stagedAccount' }); }}>Edit</button> <button style={S.secondaryBtn} onClick={() => deleteStage(a)}>Delete</button></td>
             </tr>)}</tbody>
           </table></div>
-          {!stagingRows.length && <p>No staged accounts found. Check the accounts_staging sheet.</p>}
+          {!stagingRows.length && <p>{boot?.dataBackend === 'supabase' ? 'Account staging is Google-only; imported accounts are available in Chart of Accounts.' : 'No staged accounts found. Check the accounts_staging sheet.'}</p>}
+          </>}
         </>}
       </main>
 
@@ -747,7 +749,7 @@ function RetinaApp() {
               <Field label="Budget"><input type="number" min="0" step="0.01" value={masterForm.budget ?? 0} onChange={e => setMasterForm(v => ({...v,budget:e.target.value}))} style={S.input} /></Field>
               <Field label="Spent (existing value)"><input readOnly value={masterForm.spent ?? 0} style={S.input} /></Field>
             </>}
-            <div style={{gridColumn:'1 / -1',display:'flex',gap:10,justifyContent:'flex-end'}}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>Save to Google Sheets</button></div>
+            <div style={{gridColumn:'1 / -1',display:'flex',gap:10,justifyContent:'flex-end'}}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>{boot?.dataBackend === "supabase" ? "Save to Supabase" : "Save to Google Sheets"}</button></div>
           </form>
         </Modal>
       )}
@@ -767,7 +769,7 @@ function RetinaApp() {
             {stageForm.newAccountId && <Field label="Account ID"><input readOnly value={stageForm.newAccountId} style={S.input} /></Field>}
             {[["division", "Division"], ["type", "Type"], ["head", "Head"], ["subHead", "Sub Head"], ["accountGroup", "Account Group"]].map(([key, label]) => <Field key={key} label={label}><input required={key === 'head'} value={stageForm[key] || ''} onChange={e => setStageForm(v => ({ ...v, [key]: e.target.value }))} style={S.input} /></Field>)}
             <Field label="Review Status"><select value={stageForm.migrationStatus || 'Pending Review'} onChange={e => setStageForm(v => ({ ...v, migrationStatus: e.target.value }))} style={S.input}><option>Pending Review</option><option>Approved</option><option>Rejected</option></select></Field>
-            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, justifyContent: 'flex-end' }}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>Save to Google Sheets</button></div>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, justifyContent: 'flex-end' }}><button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button><button type="submit" style={S.primaryBtn}>{boot?.dataBackend === "supabase" ? "Save to Supabase" : "Save to Google Sheets"}</button></div>
           </form>
         </Modal>
       )}
@@ -797,7 +799,7 @@ function RetinaApp() {
                 {txn.attachmentUrl && <button type="button" style={S.secondaryBtn} onClick={() => setTxn(x => ({...x, attachmentUrl:""}))}>Remove link</button>}
               </div>
               {uploadingAttachment && <div style={S.muted}>Uploading attachment to private Supabase Storage… please wait.</div>}
-              <div style={S.muted}>New files go to private Supabase Storage (Preview only). The transaction stores a private file reference in Google Sheets until database migration. Existing Google Drive links continue to work. Removing a reference does not delete the file.</div>
+              <div style={S.muted}>New files go to private Supabase Storage (Preview only). The transaction stores a private file reference in the active backend. Existing Google Drive links continue to work. Removing a reference does not delete the file.</div>
             </Field>
             <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" style={S.secondaryBtn} onClick={() => setModal(null)}>Cancel</button>
