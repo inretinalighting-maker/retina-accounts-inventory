@@ -439,6 +439,7 @@ function RetinaApp() {
         parties: "parties",
         projects: "projects",
         bank: "bankTransactions",
+        bankAccounts: "bankAccounts",
         reconciliation: "reconciliation",
         masters: "accounts",
         chart: "accounts",
@@ -637,7 +638,7 @@ function RetinaApp() {
             </button>
           ))}
           <button aria-expanded={mastersExpanded} onClick={() => setMastersExpanded(v => !v)}
-            style={{ ...S.navBtn, ...( ["chart", "parties", "projects"].includes(view) ? S.navBtnActive : {}), display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            style={{ ...S.navBtn, ...( ["chart", "parties", "projects", "bankAccounts"].includes(view) ? S.navBtnActive : {}), display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>Masters</span><span aria-hidden="true">{mastersExpanded ? "▾" : "▸"}</span>
           </button>
           {mastersExpanded && [
@@ -646,7 +647,7 @@ function RetinaApp() {
             ["parties", "Parties — Customers & Suppliers"],
             ["projects", "Projects — Design & Product"],
             ["products", "Products & Inventory"],
-            ["bank", "Bank & Cash Accounts"],
+            ["bankAccounts", "Bank & Cash Accounts"],
           ].map(([id, label]) => (
             <button key={`master-${id}`} onClick={() => setView(id)}
               style={{ ...S.navBtn, paddingLeft: 25, fontSize: 13, ...(view === id ? S.navBtnActive : {}) }}>
@@ -663,7 +664,7 @@ function RetinaApp() {
       <main style={S.main}>
         {view !== "report-detail" && <header style={S.header}>
           <div>
-            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects", products: "Products & Inventory", opening: "Opening Balances" }[view]) || "Retina OS"}</h1>
+            <h1 style={S.h1}>{NAV.find((x) => x[0] === view)?.[1] || ({ parties: "Parties", projects: "Projects", products: "Products & Inventory", opening: "Opening Balances", bankAccounts: "Bank & Cash Accounts" }[view]) || "Retina OS"}</h1>
             <div style={S.muted}>{import.meta.env.VITE_DEMO_MODE === "true" ? "Demo mode · data resets on reload" : (boot ? `Live mode · ${boot.dataBackend === "supabase" ? "Supabase backend" : boot.dataBackend === "google-sheets" ? "Google Sheets backend" : "Backend not verified"}` : "Connecting to data backend…")}</div>
           </div>
           <div style={S.headerActions}>
@@ -710,6 +711,7 @@ function RetinaApp() {
         {!loading && view === "parties" && <><div style={{marginBottom:12}}><button style={S.primaryBtn} onClick={() => openMaster("parties")}>+ Add Party</button></div><TablePage title="Parties" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Name"],["type","Type"],["city","City"],["gstin","GSTIN"]]} onEdit={r => openMaster("parties",r)} onDelete={r => deleteRow("parties",r)} /></>}
         {!loading && view === "projects" && <><div style={{marginBottom:12}}><button style={S.primaryBtn} onClick={() => openMaster("projects")}>+ Add Project</button></div><TablePage title="Projects" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id","ID"],["name","Name"],["division","Division"],["status","Status"],["budget","Budget"],["spent","Spent"]]} onEdit={r => openMaster("projects",r)} onDelete={r => deleteRow("projects",r)} /></>}
         {!loading && view === "bank" && <Bank rows={filteredRows} query={query} setQuery={setQuery} />}
+        {!loading && view === "bankAccounts" && <TablePage title="Bank & Cash Accounts" rows={filteredRows} query={query} setQuery={setQuery} columns={[["id", "ID"], ["name", "Account Name"]]} />}
         {!loading && view === "reconciliation" && <BankReconciliation />}
         {!loading && view === "reports" && <Reports onRun={generateReport} />}
         {!loading && (view === "masters" || view === "chart") && <>
