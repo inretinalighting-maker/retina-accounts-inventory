@@ -2,6 +2,7 @@ import { requireAdmin } from './auth.js';
 import { google } from 'googleapis';
 import { Readable } from 'node:stream';
 import crypto from 'node:crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 const ENTITIES = ['transactions','salesInvoices','purchaseBills','inventoryMovements','bankTransactions','parties','projects','reconciliation','accounts','bankAccounts','products'];
 const MASTER_KEYS = ['projects','parties','accounts','bankAccounts','products'];
@@ -625,6 +626,7 @@ async function uploadBase64(payload, req) {
 // Supabase data adapter. Activated ONLY on authenticated Vercel Preview.
 // Production and local development retain the existing Google Sheets code path.
 const SB_TABLES = new Set([...ENTITIES, 'openingBalances']);
+const sbAuthContext = new AsyncLocalStorage();
 const SB_DATE_FIELDS = new Set(['date','bankDate','valueDate']);
 function isSupabasePreview() {
   return process.env.RETINA_DATA_BACKEND === 'supabase' &&
@@ -633,16 +635,20 @@ function isSupabasePreview() {
 }
 function sbConfig() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url) || !key)
-    throw new Error('Preview Supabase URL or service-role key is not configured');
-  return { url: url.replace(/\/$/, ''), key };
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const userToken = sbAuthContext.getStore()?.token;
+  if (!url || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url))
+    throw new Error('Preview Supabase URL is not configured');
+  if (!serviceKey && (!publishableKey || !userToken))
+    throw new Error('Supabase requires either a server-only service-role key or an authenticated user with a publishable key');
+  return { url: url.replace(/\/$/, ''), key: serviceKey || publishableKey, bearer: serviceKey || userToken };
 }
 async function sbRequest(table, { method='GET', query='', body, headers={} }={}) {
   if (!SB_TABLES.has(table)) throw new Error('Unsupported Supabase table');
-  const {url,key}=sbConfig();
+  const {url,key,bearer}=sbConfig();
   const target = `${url}/rest/v1/${encodeURIComponent(table)}${query?'?'+query:''}`;
-  const response = await fetch(target, {method, headers:{apikey:key,Authorization:`Bearer ${key}`,
+  const response = await fetch(target, {method, headers:{apikey:key,Authorization:`Bearer ${bearer}`,
     Accept:'application/json', ...(body!==undefined?{'Content-Type':'application/json',Prefer:'return=representation'}:{}), ...headers},
     ...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const raw=await response.text();
@@ -821,8 +827,9 @@ async function sbReconcileBank(payload) {
 }
 async function supabaseDispatch(name,args) {
   const api={kind:'supabase'};
-  if(name==='apiBootstrap')return {masters:Object.fromEntries(await Promise.all(MASTER_KEYS.map(async k=>[k,await sbRead(k)]))),orgName:'Retina'};
+  if(name==='apiBootstrap')return {masters:Object.fromEntries(await Promise.all(MASTER_KEYS.map(async k=>[k,await sbRead(k)]))),orgName:'Retina',dataBackend:'supabase'};
   if(name==='apiList')return args[0]==='bankTransactions'?cashBankBook(api,args[1]||{}):sbRead(args[0]);
+  if(name==='apiStagingAccounts')return []; // Staging is Google-only; imported accounts are in the live master.
   if(name==='apiDashboard')return dashboard(api,args[0]||{});
   if(name==='apiListOpeningBalances')return sbRead('openingBalances');
   if(name==='apiSaveOpeningBalances')return sbOpening(args[0]);
@@ -866,7 +873,8 @@ export default async function handler(req, res) {
       return res.status(503).json({error:'Supabase data backend is restricted to authenticated Preview deployments'});
     }
     if (isSupabasePreview()) {
-      const result=await supabaseDispatch(name,args);
+      const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+      const result=await sbAuthContext.run({token},()=>supabaseDispatch(name,args));
       res.setHeader('X-Retina-Data-Backend','supabase-preview');
       return res.status(200).json(result);
     }
@@ -879,7 +887,7 @@ export default async function handler(req, res) {
     const api = client();
     let result;
     if (name === 'apiBootstrap') {
-      result = { masters: Object.fromEntries(await Promise.all(MASTER_KEYS.map(async k => [k, await read(k, api)]))), orgName: 'Retina' };
+      result = { masters: Object.fromEntries(await Promise.all(MASTER_KEYS.map(async k => [k, await read(k, api)]))), orgName: 'Retina', dataBackend: 'google-sheets' };
     } else if (name === 'apiStagingAccounts') {
       result = await stagingAccounts(api);
     } else if (name === 'apiSaveStagedAccount') {
